@@ -3,7 +3,8 @@
 # Testing
 nosetests.xml
 
-# virtualenv
+.vagrant
+.virtualenv
 venv/
 
 # Packages
