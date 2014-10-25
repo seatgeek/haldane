@@ -9,5 +9,6 @@ class Config(object):
     CACHE_EXPIRATION = int(os.getenv('CACHE_EXPIRATION', 180))
     CACHE_SIZE = int(os.getenv('CACHE_SIZE', 1024))
     DEBUG = to_bool(os.getenv('DEBUG', 0))
+    LISTEN_INTERFACE = os.getenv('LISTEN_INTERFACE', '0.0.0.0')
     PORT = int(os.getenv('PORT', 5000))
     SUPPRESS_SENTRY = to_bool(os.getenv('SUPPRESS_SENTRY', 0))
