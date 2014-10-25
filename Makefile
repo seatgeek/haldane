@@ -36,7 +36,7 @@ test:
 
 .PHONY: server
 server:
-	$(PYTHON) runserver.py
+	$(PYTHON) application.py
 
 .PHONY: gunicorn
 gunicorn:
