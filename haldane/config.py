@@ -6,6 +6,7 @@ class Config(object):
     AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
     AWS_REGIONS = os.getenv('AWS_REGIONS', 'us-east-1').split(',')
     AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+    BASIC_AUTH = os.getenv('BASIC_AUTH')
     CACHE_EXPIRATION = int(os.getenv('CACHE_EXPIRATION', 180))
     CACHE_SIZE = int(os.getenv('CACHE_SIZE', 1024))
     DEBUG = to_bool(os.getenv('DEBUG', 0))
