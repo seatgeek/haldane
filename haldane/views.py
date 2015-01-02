@@ -11,6 +11,8 @@ from flask import request
 from flask import Response
 
 from haldane.config import Config
+from haldane.log import getRequestLogger
+from haldane.log import log_request
 from haldane.utils import set_retrieve
 from haldane.utils import sorted_dict
 from haldane.utils import sorted_json
@@ -18,6 +20,7 @@ from haldane.utils import to_bool
 
 
 blueprint_http = Blueprint('blueprint_http', __name__)
+request_logger = getRequestLogger()
 
 
 @blueprint_http.app_errorhandler(404)
@@ -27,6 +30,12 @@ def page_not_found(e):
         mimetype='application/json',
         status=404
     )
+
+
+@blueprint_http.after_request
+def log_http_request(response):
+    log_request(request, response, request_logger)
+    return response
 
 
 @blueprint_http.route('/')
