@@ -83,7 +83,7 @@ def nodes_by_group(group=None):
             groups = {}
     return json_response({
         'meta': {
-            'took': time.clock() - time_start,
+            'took': time.time() - time_start,
             'total': len(groups),
             'regions': regions,
         },
@@ -102,7 +102,7 @@ def nodes(region=None):
 
     return json_response({
         'meta': {
-            'took': time.clock() - time_start,
+            'took': time.time() - time_start,
             'total': len(nodes),
             'regions': regions,
         },
