@@ -32,9 +32,6 @@ def check_auth(username, password):
     """This function is called to check if a username /
     password combination is valid.
     """
-    if not Config.BASIC_AUTH:
-        return True
-
     authentications = Config.BASIC_AUTH.split(',')
     authentication = '{0}:{1}'.format(username, password)
 
@@ -52,6 +49,9 @@ def authenticate():
 def requires_auth(f):
     @functools.wraps(f)
     def decorated(*args, **kwargs):
+        if not Config.BASIC_AUTH:
+            return f(*args, **kwargs)
+
         auth = request.authorization
         if not auth or not check_auth(auth.username, auth.password):
             return authenticate()
