@@ -141,6 +141,7 @@ def _configure_error_handler():
     handler = None
     if BUGSNAG_API_KEY:
         handler = BugsnagHandler()
+        handler.setLevel(logging.ERROR)
 
     if SENTRY_DSN:
         handler = SentryHandler(SENTRY_DSN)
