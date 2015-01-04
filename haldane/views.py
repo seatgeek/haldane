@@ -12,6 +12,7 @@ from flask import jsonify
 from flask import request
 from flask import Response
 
+from haldane.basic_auth import requires_auth
 from haldane.config import Config
 from haldane.log import getRequestLogger
 from haldane.log import log_request
@@ -21,7 +22,7 @@ from haldane.utils import sorted_dict
 from haldane.utils import sorted_json
 from haldane.utils import to_bool
 
-
+_ssl  # hack to avoid "Imported but not used" validation issue
 blueprint_http = Blueprint('blueprint_http', __name__)
 request_logger = getRequestLogger()
 aws_docs_domain = 'http://docs.aws.amazon.com'
