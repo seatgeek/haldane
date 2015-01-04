@@ -15,6 +15,7 @@ from flask import Response
 from haldane.config import Config
 from haldane.log import getRequestLogger
 from haldane.log import log_request
+from haldane.ssl_279 import _ssl
 from haldane.utils import set_retrieve
 from haldane.utils import sorted_dict
 from haldane.utils import sorted_json
