@@ -8,6 +8,7 @@ import json
 import lru
 
 from flask import Blueprint
+from flask import jsonify
 from flask import request
 from flask import Response
 
@@ -22,6 +23,9 @@ from haldane.utils import to_bool
 
 blueprint_http = Blueprint('blueprint_http', __name__)
 request_logger = getRequestLogger()
+aws_docs_domain = 'http://docs.aws.amazon.com'
+error_link = '{0}/AWSEC2/latest/APIReference/errors-overview.html'.format(
+    aws_docs_domain)
 
 
 def check_auth(username, password):
@@ -62,6 +66,18 @@ def page_not_found(e):
         mimetype='application/json',
         status=404
     )
+
+
+@blueprint_http.errorhandler(boto.exception.EC2ResponseError)
+def handle_ec2_response_error(error):
+    response = jsonify({
+        'type': error_link,
+        'title': '{0} Error in EC2 Respone'.format(error.error_code),
+        'detail': error.error_message,
+        'status': 500,
+    })
+    response.status_code = 500
+    return response
 
 
 @blueprint_http.after_request
