@@ -5,8 +5,9 @@ a friendly http interface to the ec2 api
 ## Requirements
 
 - Vagrant
-- Virtualbox
+- VMWare Fusion
 - 1 gigabytes of free ram
+- Python 2.7.8 or below (if not using the Vagrant/Heroku setup)
 
 ## Installation
 
