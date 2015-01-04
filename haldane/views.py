@@ -54,6 +54,18 @@ def handle_ec2_response_error(error):
     return response
 
 
+@blueprint_http.errorhandler(LookupError)
+def handle_lookup_error(error):
+    logger.info('LookupError: {0}'.format(error.message))
+    response = jsonify({
+        'title': 'Invalid argument passed',
+        'detail': error.message,
+        'status': 400,
+    })
+    response.status_code = 400
+    return response
+
+
 @blueprint_http.after_request
 def log_http_request(response):
     log_request(request, response, request_logger)
@@ -117,8 +129,9 @@ def get_regions(region=None):
     if region is None:
         regions = Config.AWS_REGIONS
     else:
-        if region in Config.AWS_REGIONS:
-            regions = [region]
+        if region not in Config.AWS_REGIONS:
+            raise LookupError('Invalid region querystring argument passed')
+        regions = [region]
     return regions
 
 

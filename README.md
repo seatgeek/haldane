@@ -51,12 +51,27 @@ source .env && make test
 - `/`: Healthcheck
 - `/_status`: Healthcheck
 - `/nodes/<region>?q=<query>`: List all nodes
-  - `region` (optional): Filter to a specific region
   - `query` (optional): Substring to search node names by before returning the resultset
+  - `region` (optional): Filter to a specific region
 - `/nodes/group/<group>?region=us-east-1&query=<query>`: List all nodes grouped by autoscale group
   - `group` (optional): An autoscale group name to filter by
-  - `region` (optional): Filter to a specific region
   - `query` (optional): Substring to search node names by before returning the resultset
+  - `region` (optional): Filter to a specific region
+
+If an invalid querystring argument is passed, a `json` response similar to the following will be sent from the service:
+
+```javascript
+{
+  detail: "Invalid region querystring argument passed.",
+  status: 400,
+  title: "Invalid argument passed"
+}
+```
+
+The following errors are possible:
+
+- Invalid region querystring argument
+- General EC2ResponseError
 
 ## How it works
 
