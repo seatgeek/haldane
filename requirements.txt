@@ -9,3 +9,4 @@ ebs-deploy==1.7
 eventlet==0.16
 bugsnag==2.2.0
 newrelic==2.40.0.34
+git+git://github.com/josegonzalez/gevent.git
