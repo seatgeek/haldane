@@ -94,6 +94,7 @@ def nodes_by_group(group=None):
             'took': time.time() - time_start,
             'total': len(groups),
             'regions': regions,
+            'per_page': len(groups)
         },
         'groups': groups
     })
@@ -108,12 +109,15 @@ def nodes(region=None):
     regions = get_regions(region)
     status = get_status(request.args.get('status'))
     nodes = get_nodes(regions, query, status=status)
+    total_nodes = len(nodes)
+    nodes = limit_nodes(nodes, limit=request.args.get('limit'))
 
     return json_response({
         'meta': {
             'took': time.time() - time_start,
-            'total': len(nodes),
+            'total': total_nodes,
             'regions': regions,
+            'per_page': len(nodes)
         },
         'nodes': nodes
     })
@@ -173,6 +177,22 @@ def get_nodes(regions, query=None, status=None):
                 _nodes[name] = node
         nodes = _nodes
     return nodes
+
+
+def limit_nodes(nodes, limit=None):
+    if limit is None:
+        return nodes
+
+    count = 0
+    limit = int(limit)
+    _nodes = {}
+    for name, node in nodes.items():
+        if count == limit:
+            break
+
+        count += 1
+        _nodes[name] = node
+    return _nodes
 
 
 def sort_by_group(nodes, group=None):
