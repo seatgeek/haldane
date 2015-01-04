@@ -1,1 +1,1 @@
-web: gunicorn -w 2 haldane:make_application\(\) --log-file -
+web: gunicorn haldane:make_application\(\) --log-file -
