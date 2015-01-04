@@ -7,7 +7,12 @@ def make_application():
 
     flask_app = Flask(__name__, static_url_path='')
 
-    if not Config.SUPPRESS_SENTRY:
+    if Config.BUGSNAG_API_KEY:
+        import bugsnag
+        from bugsnag.flask import handle_exceptions
+        bugsnag.configure(api_key=Config.BUGSNAG_API_KEY)
+        handle_exceptions(flask_app)
+    elif Config.SENTRY_DSN:
         from raven.contrib.flask import Sentry
         Sentry(flask_app)
 

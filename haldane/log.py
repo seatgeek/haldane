@@ -6,7 +6,6 @@ log:
     Environment Variables:
         LOGGING_VERBOSE: Should run logger in verbose mode, which outputs
             logger.debug() messages. Default = False.
-        SUPPRESS_SENTRY: Should suppress sentry error handling
 
     Interface:
         from sglib import log
@@ -116,8 +115,8 @@ error_stream_handler.setFormatter(normal_formatter)
 error_stream_handler.setLevel(logging.ERROR)
 
 # environment flags we should honor
+BUGSNAG_API_KEY = os.getenv('BUGSNAG_API_KEY')
 LOGGING_VERBOSE = _to_bool(os.getenv('LOGGING_VERBOSE', False))
-SUPPRESS_SENTRY = _to_bool(os.getenv('SUPPRESS_SENTRY', False))
 SENTRY_DSN = os.getenv('SENTRY_DSN', None)
 
 if LOGGING_VERBOSE:
@@ -126,41 +125,35 @@ if LOGGING_VERBOSE:
 
 logging.config.dictConfig(LOG_SETTINGS)
 
-from raven.conf import setup_logging
-from raven.handlers.logging import SentryHandler
-assert setup_logging
+if BUGSNAG_API_KEY:
+    from bugsnag.handlers import BugsnagHandler
+
+if SENTRY_DSN:
+    from raven.conf import setup_logging
+    from raven.handlers.logging import SentryHandler
+    assert setup_logging
 
 
-def _configure_sentry_handler(dsn=None, force=False):
-    # honor suppress_sentry flag
-    if SUPPRESS_SENTRY and not force:
-        return None
+def _configure_error_handler():
+    BUGSNAG_API_KEY = os.getenv('BUGSNAG_API_KEY')
+    SENTRY_DSN = os.getenv('SENTRY_DSN', None)
 
-    # we can override env variable here
-    if dsn is None:
-        dsn = SENTRY_DSN
+    handler = None
+    if BUGSNAG_API_KEY:
+        handler = BugsnagHandler()
 
-    if dsn is None:
-        return None
-
-    handler = SentryHandler(dsn)
-    handler.setLevel(logging.ERROR)
+    if SENTRY_DSN:
+        handler = SentryHandler(SENTRY_DSN)
+        handler.setLevel(logging.ERROR)
     return handler
 
 
-def getLogger(name,
-              verbose=LOGGING_VERBOSE,
-              suppress_sentry=False,
-              force_use_sentry=False,
-              sentry_dsn=None):
+def getLogger(name, verbose=LOGGING_VERBOSE):
     """
     returns a python logger object configured according to seatgeek's standards
 
     Args:
         verbose: [True/False] -- default is set by env variable LOGGING_VERBOSE
-        force_use_sentry: [True/False]
-        suppress_sentry: [True/False]
-        sentry_dsn: sentry dsn string
     """
     logger = logging.getLogger(name)
 
@@ -179,18 +172,14 @@ def getLogger(name,
         logger.addHandler(error_stream_handler)
 
     logger.propagate = False
-    if not suppress_sentry:
-        handler = _configure_sentry_handler(sentry_dsn, force=force_use_sentry)
-        if handler:
-            logger.addHandler(handler)
+    error_handler = _configure_error_handler()
+    if error_handler:
+        logger.addHandler(error_handler)
 
     return logger
 
 
-def getRequestLogger(verbose=LOGGING_VERBOSE,
-                     suppress_sentry=False,
-                     force_use_sentry=False,
-                     sentry_dsn=None):
+def getRequestLogger(verbose=LOGGING_VERBOSE):
     logger = logging.getLogger('werkzeug')
 
     # just in case that was not a new logger, get rid of all the handlers
@@ -208,10 +197,9 @@ def getRequestLogger(verbose=LOGGING_VERBOSE,
         logger.addHandler(werkzeug_error_stream_handler)
 
     logger.propagate = False
-    if not suppress_sentry:
-        handler = _configure_sentry_handler(sentry_dsn, force=force_use_sentry)
-        if handler:
-            logger.addHandler(handler)
+    error_handler = _configure_error_handler()
+    if error_handler:
+        logger.addHandler(error_handler)
 
     return logger
 
