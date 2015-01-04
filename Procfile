@@ -1,1 +1,1 @@
-web: gunicorn haldane:make_application\(\) --log-file -
+web: gunicorn haldane:make_application\(\) --workers $WEB_CONCURRENCY --log-file -
