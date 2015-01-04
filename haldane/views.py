@@ -74,13 +74,8 @@ def nodes_by_group(group=None):
     query = request.args.get('query', request.args.get('q'))
     regions = get_regions(request.args.get('region'))
     nodes = get_nodes(regions, query)
+    groups = sort_by_group(nodes, group=group)
 
-    groups = sort_by_group(nodes)
-    if group is not None:
-        if group in groups:
-            groups = {group: groups[group]}
-        else:
-            groups = {}
     return json_response({
         'meta': {
             'took': time.time() - time_start,
@@ -141,18 +136,23 @@ def get_nodes(regions, query=None):
     return nodes
 
 
-def sort_by_group(nodes):
+def sort_by_group(nodes, group=None):
     groups = {
         'None': {}
     }
     for name, node in nodes.items():
-        group = node.get('group', None)
-        if group is None:
+        if node.get('group') is None:
             groups['None'][name] = node
         else:
-            if group not in groups:
-                groups[group] = {}
-            groups[group][name] = node
+            if node.get('group') not in groups:
+                groups[node.get('group')] = {}
+            groups[node.get('group')][name] = node
+
+    if group is not None:
+        if group in groups:
+            groups = {group: groups[group]}
+        else:
+            groups = {}
 
     return groups
 
