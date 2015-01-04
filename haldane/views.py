@@ -71,7 +71,7 @@ def status():
 @requires_auth
 def nodes_by_group(group=None):
     time_start = time.time()
-    query = request.args.get('query')
+    query = request.args.get('query', request.args.get('q'))
     regions = get_regions(request.args.get('region'))
     nodes = get_nodes(regions, query)
 
@@ -96,7 +96,7 @@ def nodes_by_group(group=None):
 @requires_auth
 def nodes(region=None):
     time_start = time.time()
-    query = request.args.get('query')
+    query = request.args.get('query', request.args.get('q'))
     regions = get_regions(region)
     nodes = get_nodes(regions, query)
 
