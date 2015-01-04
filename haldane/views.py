@@ -85,7 +85,8 @@ def nodes_by_group(group=None):
     time_start = time.time()
     query = request.args.get('query', request.args.get('q'))
     regions = get_regions(request.args.get('region'))
-    nodes = get_nodes(regions, query)
+    status = get_status(request.args.get('status'))
+    nodes = get_nodes(regions, query, status=status)
     groups = sort_by_group(nodes, group=group)
 
     return json_response({
@@ -105,7 +106,8 @@ def nodes(region=None):
     time_start = time.time()
     query = request.args.get('query', request.args.get('q'))
     regions = get_regions(region)
-    nodes = get_nodes(regions, query)
+    status = get_status(request.args.get('status'))
+    nodes = get_nodes(regions, query, status=status)
 
     return json_response({
         'meta': {
@@ -124,6 +126,23 @@ def json_response(data):
     )
 
 
+def get_status(status=None):
+    if status is None:
+        return None
+    valid_states = [
+        'pending',
+        'running',
+        'shutting-down',
+        'terminated',
+        'stopping',
+        'stopped',
+    ]
+    if status not in valid_states:
+        raise LookupError('Invalid status querystring argument passed.')
+
+    return status
+
+
 def get_regions(region=None):
     regions = []
     if region is None:
@@ -135,10 +154,17 @@ def get_regions(region=None):
     return regions
 
 
-def get_nodes(regions, query=None):
+def get_nodes(regions, query=None, status=None):
     nodes = {}
     for region in regions:
         nodes.update(get_nodes_in_region(region))
+
+    if status is not None:
+        _nodes = {}
+        for name, node in nodes.items():
+            if node.get('status') == status:
+                _nodes[name] = node
+        nodes = _nodes
 
     if query is not None:
         _nodes = {}

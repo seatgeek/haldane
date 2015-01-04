@@ -53,10 +53,21 @@ source .env && make test
 - `/nodes/<region>?q=<query>`: List all nodes
   - `query` (optional): Substring to search node names by before returning the resultset
   - `region` (optional): Filter to a specific region
+  - `status` (optional): Filter to specific node status
 - `/nodes/group/<group>?region=us-east-1&query=<query>`: List all nodes grouped by autoscale group
   - `group` (optional): An autoscale group name to filter by
   - `query` (optional): Substring to search node names by before returning the resultset
   - `region` (optional): Filter to a specific region
+  - `status` (optional): Filter to specific node status
+
+Valid `status` values are as follows:
+
+- `pending`
+- `running`
+- `shutting-down`
+- `terminated`
+- `stopping`
+- `stopped`
 
 If an invalid querystring argument is passed, a `json` response similar to the following will be sent from the service:
 
@@ -71,6 +82,7 @@ If an invalid querystring argument is passed, a `json` response similar to the f
 The following errors are possible:
 
 - Invalid region querystring argument
+- Invalid status querystring argument
 - General EC2ResponseError
 
 ## How it works
