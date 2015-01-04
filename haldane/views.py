@@ -5,6 +5,7 @@ import boto
 import boto.ec2
 import json
 import lru
+import time
 
 from flask import Blueprint
 from flask import jsonify
@@ -69,6 +70,7 @@ def status():
 @blueprint_http.route('/nodes/group/<group>')
 @requires_auth
 def nodes_by_group(group=None):
+    time_start = time.time()
     query = request.args.get('query')
     regions = get_regions(request.args.get('region'))
     nodes = get_nodes(regions, query)
@@ -81,6 +83,7 @@ def nodes_by_group(group=None):
             groups = {}
     return json_response({
         'meta': {
+            'took': time.clock() - time_start,
             'total': len(groups),
             'regions': regions,
         },
@@ -92,12 +95,14 @@ def nodes_by_group(group=None):
 @blueprint_http.route('/nodes/<region>')
 @requires_auth
 def nodes(region=None):
+    time_start = time.time()
     query = request.args.get('query')
     regions = get_regions(region)
     nodes = get_nodes(regions, query)
 
     return json_response({
         'meta': {
+            'took': time.clock() - time_start,
             'total': len(nodes),
             'regions': regions,
         },
