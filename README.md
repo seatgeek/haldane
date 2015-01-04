@@ -53,7 +53,8 @@ source .env && make test
 - `/nodes/<region>?q=<query>`: List all nodes
   - `region` (optional): Filter to a specific region
   - `query` (optional): Substring to search node names by before returning the resultset
-- `/nodes/group/<region>?q=<query>`: List all nodes grouped by autoscale group
+- `/nodes/group/<group>?region=us-east-1&query=<query>`: List all nodes grouped by autoscale group
+  - `group` (optional): An autoscale group name to filter by
   - `region` (optional): Filter to a specific region
   - `query` (optional): Substring to search node names by before returning the resultset
 
