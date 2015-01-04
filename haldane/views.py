@@ -77,11 +77,11 @@ def status():
 
 
 @blueprint_http.route('/nodes/group')
-@blueprint_http.route('/nodes/group/<region>')
+@blueprint_http.route('/nodes/group/<group>')
 @requires_auth
-def nodes_by_group(region=None):
+def nodes_by_group(group=None):
     query = request.args.get('query')
-    regions = get_regions(region)
+    regions = get_regions(request.args.get('region'))
     nodes = get_nodes(regions, query)
 
     groups = sort_by_group(nodes)
