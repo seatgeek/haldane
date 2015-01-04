@@ -13,6 +13,7 @@ from flask import Response
 
 from haldane.basic_auth import requires_auth
 from haldane.config import Config
+from haldane.log import getLogger
 from haldane.log import getRequestLogger
 from haldane.log import log_request
 from haldane.ssl_279 import _ssl
@@ -23,6 +24,7 @@ from haldane.utils import to_bool
 
 _ssl  # hack to avoid "Imported but not used" validation issue
 blueprint_http = Blueprint('blueprint_http', __name__)
+logger = getLogger('haldane')
 request_logger = getRequestLogger()
 aws_docs_domain = 'http://docs.aws.amazon.com'
 error_link = '{0}/AWSEC2/latest/APIReference/errors-overview.html'.format(
@@ -40,6 +42,7 @@ def page_not_found(e):
 
 @blueprint_http.errorhandler(boto.exception.EC2ResponseError)
 def handle_ec2_response_error(error):
+    logger.info('{0}: {1}'.format(error.error_code, error.error_message))
     response = jsonify({
         'type': error_link,
         'title': '{0} Error in EC2 Respone'.format(error.error_code),
