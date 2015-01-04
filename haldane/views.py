@@ -85,7 +85,11 @@ def nodes_by_group(group=None):
     nodes = get_nodes(regions, query)
 
     groups = sort_by_group(nodes)
-
+    if group is not None:
+        if group in groups:
+            groups = {group: groups[group]}
+        else:
+            groups = {}
     return json_response({
         'meta': {
             'total': len(groups),
