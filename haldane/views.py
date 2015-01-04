@@ -73,10 +73,7 @@ def log_http_request(response):
 @blueprint_http.route('/')
 @blueprint_http.route('/_status')
 def status():
-    return Response(
-        json.dumps({'status': 'ok'}),
-        mimetype='application/json',
-    )
+    return json_response({'status': 'ok'})
 
 
 @blueprint_http.route('/nodes/group')
@@ -89,17 +86,13 @@ def nodes_by_group(region=None):
 
     groups = sort_by_group(nodes)
 
-    data = {
+    return json_response({
         'meta': {
             'total': len(groups),
             'regions': regions,
         },
         'groups': groups
-    }
-    return Response(
-        sorted_json(data),
-        mimetype='application/json',
-    )
+    })
 
 
 @blueprint_http.route('/nodes')
@@ -110,13 +103,16 @@ def nodes(region=None):
     regions = get_regions(region)
     nodes = get_nodes(regions, query)
 
-    data = {
+    return json_response({
         'meta': {
             'total': len(nodes),
             'regions': regions,
         },
         'nodes': nodes
-    }
+    })
+
+
+def json_response(data):
     return Response(
         sorted_json(data),
         mimetype='application/json',
