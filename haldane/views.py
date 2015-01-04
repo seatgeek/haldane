@@ -118,9 +118,12 @@ def json_response(data):
 
 
 def get_regions(region=None):
-    regions = [region]
+    regions = []
     if region is None:
         regions = Config.AWS_REGIONS
+    else:
+        if region in Config.AWS_REGIONS:
+            regions = [region]
     return regions
 
 
