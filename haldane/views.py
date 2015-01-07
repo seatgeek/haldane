@@ -268,7 +268,8 @@ def get_nodes_in_region(region):
             'instance_type': instance.instance_type,
             'id': instance_id,
             'bootstrapped': bootstrapped,
-            'group': group
+            'group': group,
+            'tags': tags,
         })
 
     return sorted_dict(instances)
