@@ -51,12 +51,12 @@ source .env && make test
 
 - `/`: Healthcheck
 - `/_status`: Healthcheck
-- `/nodes/<region>?q=<query>`: List all nodes
+- `/nodes/<region>?q=<query>&limit=<limit>&status=<status>`: List all nodes
   - `limit` (optional): An integer to limit the resultset by
   - `query` (optional): Substring to search node names by before returning the resultset
   - `region` (optional): Filter to a specific region
   - `status` (optional): Filter to specific node status
-- `/nodes/group/<group>?region=us-east-1&query=<query>`: List all nodes grouped by autoscale group
+- `/nodes/group/<group>?region=<region>&query=<query>&status=<status>`: List all nodes grouped by autoscale group
   - `group` (optional): An autoscale group name to filter by
   - `query` (optional): Substring to search node names by before returning the resultset
   - `region` (optional): Filter to a specific region
