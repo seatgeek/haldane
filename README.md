@@ -62,6 +62,14 @@ source .env && make test
   - `region` (optional): Filter to a specific region
   - `status` (optional): Filter to specific node status
 
+You can also filter by tags by using the `tags.TAG_NAME` querystring pattern as follows:
+
+```bash
+curl http://localhost:5000/nodes?tags.bootstrapped=true&tags.Name=admin
+```
+
+Tag filtering is performed via a substring match *after* retrieving results from the EC2 API.
+
 Valid `status` values are as follows:
 
 - `pending`

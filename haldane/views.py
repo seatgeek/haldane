@@ -176,7 +176,28 @@ def get_nodes(regions, query=None, status=None):
             if query in name:
                 _nodes[name] = node
         nodes = _nodes
+
+    tag_filters = get_tag_filters(request.args)
+    for key, value in tag_filters.items():
+        _nodes = {}
+        for name, node in nodes.items():
+            tag = node.get('tags', {}).get(key)
+            if not tag:
+                continue
+
+            if value in tag:
+                _nodes[name] = node
+        nodes = _nodes
+
     return nodes
+
+
+def get_tag_filters(args):
+    tags = {}
+    for key, value in args.items():
+        if key.startswith('tags.'):
+            tags[key[5:]] = value
+    return tags
 
 
 def limit_nodes(nodes, limit=None):
