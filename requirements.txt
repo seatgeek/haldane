@@ -6,6 +6,6 @@ blinker==1.3
 gevent==1.0.1
 py_lru_cache==0.1.2
 ebs-deploy==1.7
-eventlet==0.16
+eventlet==0.16.1
 bugsnag==2.2.0
 newrelic==2.40.0.34
