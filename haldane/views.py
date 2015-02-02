@@ -177,6 +177,18 @@ def get_nodes(regions, query=None, status=None):
                 _nodes[name] = node
         nodes = _nodes
 
+    group = request.args.get('group', None)
+    if group is not None:
+        _nodes = {}
+        for name, node in nodes.items():
+            _group = node.get('group', '')
+            if not _group:
+                continue
+
+            if _group == group:
+                _nodes[name] = node
+        nodes = _nodes
+
     tag_filters = get_tag_filters(request.args)
     for key, value in tag_filters.items():
         _nodes = {}

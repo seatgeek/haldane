@@ -51,7 +51,8 @@ source .env && make test
 
 - `/`: Healthcheck
 - `/_status`: Healthcheck
-- `/nodes/<region>?q=<query>&limit=<limit>&status=<status>`: List all nodes
+- `/nodes/<region>?q=<query>&limit=<limit>&status=<status>&group=<group>`: List all nodes
+  - `group` (optional): An autoscale group name to filter by
   - `limit` (optional): An integer to limit the resultset by
   - `query` (optional): Substring to search node names by before returning the resultset
   - `region` (optional): Filter to a specific region
