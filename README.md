@@ -52,12 +52,14 @@ source .env && make test
 - `/`: Healthcheck
 - `/_status`: Healthcheck
 - `/nodes/<region>?q=<query>&limit=<limit>&status=<status>&group=<group>`: List all nodes
+  - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects.
   - `group` (optional): An autoscale group name to filter by
   - `limit` (optional): An integer to limit the resultset by
   - `query` (optional): Substring to search node names by before returning the resultset
   - `region` (optional): Filter to a specific region
   - `status` (optional): Filter to specific node status
 - `/nodes/group/<group>?region=<region>&query=<query>&status=<status>`: List all nodes grouped by autoscale group
+  - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects.
   - `group` (optional): An autoscale group name to filter by
   - `query` (optional): Substring to search node names by before returning the resultset
   - `region` (optional): Filter to a specific region
