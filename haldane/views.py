@@ -86,7 +86,7 @@ def nodes_by_group(group=None):
     query = request.args.get('query', request.args.get('q'))
     regions = get_regions(request.args.get('region'))
     status = get_status(request.args.get('status'))
-    instance_type = get_status(request.args.get('instance_type'))
+    instance_type = request.args.get('instance_type')
     nodes = get_nodes(regions, query, status=status, instance_type=instance_type)
     groups = sort_by_group(nodes, group=group)
 
@@ -113,7 +113,7 @@ def nodes(region=None):
     query = request.args.get('query', request.args.get('q'))
     regions = get_regions(region)
     status = get_status(request.args.get('status'))
-    instance_type = get_status(request.args.get('instance_type'))
+    instance_type = request.args.get('instance_type')
     nodes = get_nodes(regions, query, status=status, instance_type=instance_type)
     total_nodes = len(nodes)
     nodes = limit_nodes(nodes, limit=request.args.get('limit'))
