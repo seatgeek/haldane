@@ -318,6 +318,7 @@ def get_nodes_in_region(region):
             'ip_address': ip_address,
             'private_ip_address': pip_address,
             'status': instance.state,
+            'launch_time': instance.launch_time,
             'region': region,
             'instance_type': instance.instance_type,
             'id': instance_id,
