@@ -45,14 +45,30 @@ venv:
 	$(PIP_ACCEL) install nose==1.3.3 > /dev/null
 	$(PIP_ACCEL) install coveralls > /dev/null
 
+.PHONY: fab
+fab:
+	$(FAB) $(RUN_ARGS)
+
 .PHONY: test
 test:
 	$(PIP) install nose==1.3.3 > /dev/null
 	export SG_ENV=test && $(NOSE)
 
+.PHONY: restart_services
+restart_services:
+	echo "no services to restart"
+
+.PHONY: travis
+travis:
+	$(NOSE)
+
+.PHONY: foreman
+foreman:
+	$(VIRTUALENV_BIN)/honcho start
+
 .PHONY: server
 server:
-	$(PYTHON) application.py
+	export DEBUG=1 && $(PYTHON) application.py
 
 .PHONY: gunicorn
 gunicorn:

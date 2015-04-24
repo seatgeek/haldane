@@ -23,8 +23,6 @@ apt-get install -qq -y --force-yes python-dev python-pip python-crypto > /dev/nu
 
 command -v /usr/local/bin/pip > /dev/null || {
   echo "- installing proper version of pip"
-  curl --silent --output distribute_setup.py http://python-distribute.org/distribute_setup.py
-  python distribute_setup.py > /dev/null
   easy_install pip > /dev/null
   pip install pip==1.4.1 > /dev/null
 }
@@ -90,6 +88,9 @@ make venv
 echo "- running tests"
 source .env.test && make test
 
+echo "- starting services"
+make restart_services
+
 echo -e "\n- ALL CLEAR! SSH access via 'vagrant ssh'."
 echo "  Perform all git work on your local box. This box has no access to the nodes, outside of bootstrapping."
 
@@ -99,9 +100,10 @@ SCRIPT
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = "precise64"
-  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
-  config.vm.hostname = "haldane.dev"
+  config.vm.box = "chef/ubuntu-14.04"
+  config.vm.synced_folder ".", "/vagrant", type: "nfs", mount_options: ['actimeo=2']
+  config.ssh.forward_agent = true
+
   config.vm.network "forwarded_port", guest: 5000, host: 5000
 
   config.vm.provider "virtualbox" do |v, override|
@@ -111,10 +113,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     v.customize ["modifyvm", :id, "--cpus", 2]
   end
 
-  # Every Vagrant virtual environment requires a box to build off of.
   config.vm.provider :vmware_fusion do |v, override|
-    override.vm.box = "precise64_vmware_fusion"
-    override.vm.box_url = "http://files.vagrantup.com/precise64_vmware_fusion.box"
     v.vmx["memsize"] = "1024"
     v.vmx["numvcpus"] = "2"
   end
@@ -132,6 +131,4 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   config.vm.provision :shell, inline: $script
-
-  config.ssh.forward_agent = true
 end
