@@ -304,7 +304,8 @@ def get_nodes_in_region(region):
         if not tags:
             tags = {}
 
-        group = tags.get('aws:autoscaling:groupName', '')
+        seatgeek_group = tags.get('seatgeek:autoscaling:groupName', '')
+        group = tags.get('aws:autoscaling:groupName', seatgeek_group)
         bootstrapped = to_bool(tags.get('bootstrapped', ''))
 
         if not name:
