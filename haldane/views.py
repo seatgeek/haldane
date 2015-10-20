@@ -314,8 +314,9 @@ def get_nodes_in_region(region):
         if group == '':
             group = None
 
-        instances[name.replace('_', '-').strip()] = sorted_dict({
-            'name': name.replace('_', '-').strip(),
+        instance_name = name.replace('_', '-').strip()
+        instances[instance_name] = sorted_dict({
+            'name': instance_name,
             'ip_address': ip_address,
             'private_ip_address': pip_address,
             'status': instance.state,
