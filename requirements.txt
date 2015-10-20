@@ -9,9 +9,9 @@ gunicorn==19.3.0
 itsdangerous==0.24
 Jinja2==2.8
 MarkupSafe==0.23
-newrelic==2.54.0.41
+newrelic==2.56.0.42
 py-lru-cache==0.1.4
 PyYAML==3.11
-raven==5.6.0
-WebOb==1.4.1
+raven==5.8.1
+WebOb==1.5.0
 Werkzeug==0.10.4
