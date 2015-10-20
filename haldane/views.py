@@ -316,19 +316,19 @@ def get_nodes_in_region(region):
 
         instance_name = name.replace('_', '-').strip()
         instances[instance_name] = sorted_dict({
-            'name': instance_name,
-            'ip_address': ip_address,
-            'private_ip_address': pip_address,
-            'status': instance.state,
-            'launch_time': instance.launch_time,
-            'region': region,
-            'instance_type': instance.instance_type,
-            'id': instance_id,
+            'availability_zone': instance.placement,
             'bootstrapped': bootstrapped,
             'group': group,
+            'id': instance_id,
+            'instance_type': instance.instance_type,
+            'ip_address': ip_address,
+            'launch_time': instance.launch_time,
+            'name': instance_name,
+            'private_ip_address': pip_address,
+            'region': region,
+            'status': instance.state,
             'tags': tags,
             'vpc_id': instance.vpc_id,
-            'availability_zone': instance.placement,
         })
 
     return sorted_dict(instances)
