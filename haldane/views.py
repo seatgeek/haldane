@@ -326,6 +326,8 @@ def get_nodes_in_region(region):
             'bootstrapped': bootstrapped,
             'group': group,
             'tags': tags,
+            'vpc_id': instance.vpc_id,
+            'availability_zone': instance.placement,
         })
 
     return sorted_dict(instances)
