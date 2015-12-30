@@ -85,9 +85,14 @@ def nodes_by_group(group=None):
     time_start = time.time()
     query = request.args.get('query', request.args.get('q'))
     regions = get_regions(request.args.get('region'))
-    status = get_status(request.args.get('status'))
     instance_type = request.args.get('instance_type')
-    nodes = get_nodes(regions, query, status=status, instance_type=instance_type)
+    status = get_status(request.args.get('status'))
+    elastic_ip = request.args.get('elastic_ip')
+    nodes = get_nodes(regions,
+                      query,
+                      status=status,
+                      instance_type=instance_type,
+                      elastic_ip=elastic_ip)
     groups = sort_by_group(nodes, group=group)
 
     _groups = {}
@@ -111,10 +116,15 @@ def nodes_by_group(group=None):
 def nodes(region=None):
     time_start = time.time()
     query = request.args.get('query', request.args.get('q'))
-    regions = get_regions(region)
-    status = get_status(request.args.get('status'))
+    regions = get_regions(request.args.get('region', region))
     instance_type = request.args.get('instance_type')
-    nodes = get_nodes(regions, query, status=status, instance_type=instance_type)
+    status = get_status(request.args.get('status'))
+    elastic_ip = request.args.get('elastic_ip')
+    nodes = get_nodes(regions,
+                      query,
+                      status=status,
+                      instance_type=instance_type,
+                      elastic_ip=elastic_ip)
     total_nodes = len(nodes)
     nodes = limit_nodes(nodes, limit=request.args.get('limit'))
     nodes = format_nodes(nodes, format=request.args.get('format'))
@@ -165,7 +175,7 @@ def get_regions(region=None):
     return regions
 
 
-def get_nodes(regions, query=None, status=None, instance_type=None):
+def get_nodes(regions, query=None, status=None, instance_type=None, elastic_ip=None):
     nodes = {}
     for region in regions:
         nodes.update(get_nodes_in_region(region))
@@ -174,6 +184,14 @@ def get_nodes(regions, query=None, status=None, instance_type=None):
         _nodes = {}
         for name, node in nodes.items():
             if node.get('status') == status:
+                _nodes[name] = node
+        nodes = _nodes
+
+    if elastic_ip is not None:
+        elastic_ip = to_bool(elastic_ip)
+        _nodes = {}
+        for name, node in nodes.items():
+            if node.get('elastic_ip') == elastic_ip:
                 _nodes[name] = node
         nodes = _nodes
 
@@ -273,6 +291,13 @@ def sort_by_group(nodes, group=None):
 @lru.lru_cache_function(
     max_size=Config.CACHE_SIZE,
     expiration=Config.CACHE_EXPIRATION)
+def get_elastic_ips(conn, region):
+    return [address.public_ip for address in conn.get_all_addresses()]
+
+
+@lru.lru_cache_function(
+    max_size=Config.CACHE_SIZE,
+    expiration=Config.CACHE_EXPIRATION)
 def get_nodes_in_region(region):
     conn = boto.ec2.connect_to_region(
         region,
@@ -282,6 +307,8 @@ def get_nodes_in_region(region):
 
     if conn is None:
         return {}
+
+    elastic_ips = get_elastic_ips(conn, region)
 
     instances = {}
     reservations = conn.get_all_reservations()
@@ -319,6 +346,7 @@ def get_nodes_in_region(region):
             'availability_zone': instance.placement,
             'bootstrapped': bootstrapped,
             'group': group,
+            'elastic_ip': ip_address in elastic_ips,
             'id': instance_id,
             'instance_type': instance.instance_type,
             'ip_address': ip_address,
