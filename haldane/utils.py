@@ -32,7 +32,7 @@ def to_bool(s):
     if isinstance(s, basestring):
         if s.lower() in ['true', 't']:
             return True
-        if s.lower() == ['false', 'f']:
+        if s.lower() in ['false', 'f']:
             return False
 
     return bool(s) is True
