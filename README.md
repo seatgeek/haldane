@@ -51,6 +51,7 @@ source .env && make test
 - `/`: Healthcheck
 - `/_status`: Healthcheck
 - `/nodes/<region>?q=<query>&limit=<limit>&status=<status>&group=<group>`: List all nodes
+  - `elastic_ip` (optional): Whether or not to filter to just instances with an elastic_ip
   - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects.
   - `group` (optional): An autoscale group name to filter by
   - `limit` (optional): An integer to limit the resultset by
