@@ -342,6 +342,9 @@ def get_nodes_in_region(region):
             group = None
 
         instance_name = name.replace('_', '-').strip()
+        if instance_name in instances and instance.state != 'running':
+            continue
+
         instances[instance_name] = sorted_dict({
             'availability_zone': instance.placement,
             'bootstrapped': bootstrapped,
