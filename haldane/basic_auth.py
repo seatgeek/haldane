@@ -10,6 +10,10 @@ def check_auth(username, password):
     """This function is called to check if a username /
     password combination is valid.
     """
+    provided_ips = request.access_route
+    if len(provided_ips) > 0 and provided_ips[0] in Config.ALLOWED_IPS:
+        return True
+
     authentications = Config.BASIC_AUTH.split(',')
     authentication = '{0}:{1}'.format(username, password)
 
