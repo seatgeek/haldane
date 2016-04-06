@@ -4,13 +4,18 @@ from flask import request
 from flask import Response
 
 from haldane.config import Config
+from haldane.log import getLogger
 
 
 def check_auth(username, password):
     """This function is called to check if a username /
     password combination is valid.
     """
+    logger = getLogger('haldane')
     provided_ips = request.access_route
+
+    logger.info('Provided IPs: {0}'.format(provided_ips))
+    logger.info('Allowed IPs: {0}'.format(Config.ALLOWED_IPS))
     if len(provided_ips) > 0 and provided_ips[0] in Config.ALLOWED_IPS:
         return True
 
