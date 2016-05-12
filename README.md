@@ -6,9 +6,14 @@ a friendly http interface to the ec2 api
 - Vagrant
 - VMWare Fusion
 - 1 gigabytes of free ram
-- Python 2.7.8 or below (if not using the Vagrant/Heroku setup)
+- Python 2.7.8 or below due to a bug in 2.7.9 SSL
 
 ## Installation
+
+> OS X Users are assumed to be running homebrew. Please set that up before continuing.
+> Our makefile should install everything necessary to run this service within a Ubuntu 14.04 or Mac OS X 10.9+ environment.
+
+### On a VM
 
 Once you have vagrant and virtualbox installed, you can bring up a vm with the service installed:
 
@@ -21,6 +26,32 @@ By default, this will use `vmware_fusion` as the vagrant provider, though using 
 
 ```bash
 vagrant up --provider virtualbox
+```
+
+### Manually
+
+You will need to setup a few system-level dependencies first. You can do this using the following make target:
+
+```shell
+# install system-level dependencies first
+# may ask for sudo permissions to install certain packages
+make requirements
+
+# now create a python virtual environment with all the required packages
+# will ask for sudo permissions to install virtualenv if it is not available
+# the path is set to `.virtualenv` by default, though we respect
+# the following environment variables:
+# - `WORKON_HOME`
+# - `VIRTUALENV_PATH`
+make venv
+
+# activate the virtualenv:
+eval $(make venv-activate)
+
+# to deactivate the virtualenv, run the following command:
+deactivate
+
+# for more actions you can perform, just run the `make` or `make help` commands
 ```
 
 ## Running
