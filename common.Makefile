@@ -6,6 +6,10 @@ ifdef WORKON_HOME
 	VIRTUALENV_PATH = $(WORKON_HOME)/$(APP_NAME)
 endif
 
+ifdef VIRTUAL_ENV
+	VIRTUALENV_PATH = $(VIRTUAL_ENV)
+endif
+
 ifneq ($(wildcard .heroku/python/bin/python),)
 	VIRTUALENV_PATH = .heroku/python
 endif
