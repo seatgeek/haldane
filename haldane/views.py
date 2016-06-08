@@ -320,11 +320,12 @@ def get_nodes_in_region(region):
         group = tags.get('aws:autoscaling:groupName', seatgeek_group)
         bootstrapped = to_bool(tags.get('bootstrapped', ''))
 
-        if not name:
-            name = group + '-' + instance_id
-
         if group == '':
             group = None
+            if not name:
+                name = instance_id
+        elif not name:
+            name = group + '-' + instance_id
 
         instance_name = name.replace('_', '-').strip()
         if instance_name in instances and instance.state != 'running':
