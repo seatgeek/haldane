@@ -337,7 +337,7 @@ def get_nodes_in_region(region):
             'elastic_ip': ip_address in elastic_ips,
             'id': instance_id,
             'instance_type': instance.instance_type,
-            'instance_class': instance.instance_type.split('.')[1],
+            'instance_class': instance.instance_type.split('.')[0],
             'ip_address': ip_address,
             'launch_time': instance.launch_time,
             'name': instance_name,
