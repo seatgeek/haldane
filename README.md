@@ -88,6 +88,7 @@ source .env && make test
   - `limit` (optional): An integer to limit the resultset by
   - `query` (optional): Substring to search node names by before returning the resultset
   - `region` (optional): Filter to a specific region
+  - `instance_type` (optional): Filter to a specific instance type (eg. `t2.large`)
   - `status` (optional): Filter to specific node status
 - `/nodes/group/<group>?region=<region>&query=<query>&status=<status>`: List all nodes grouped by autoscale group
   - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects.

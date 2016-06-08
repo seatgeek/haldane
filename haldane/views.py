@@ -85,14 +85,10 @@ def nodes_by_group(group=None):
     time_start = time.time()
     query = request.args.get('query', request.args.get('q'))
     regions = get_regions(request.args.get('region'))
-    instance_type = request.args.get('instance_type')
     status = get_status(request.args.get('status'))
-    elastic_ip = request.args.get('elastic_ip')
     nodes = get_nodes(regions,
                       query,
-                      status=status,
-                      instance_type=instance_type,
-                      elastic_ip=elastic_ip)
+                      status=status)
     groups = sort_by_group(nodes, group=group)
 
     _groups = {}
@@ -117,14 +113,10 @@ def nodes(region=None):
     time_start = time.time()
     query = request.args.get('query', request.args.get('q'))
     regions = get_regions(request.args.get('region', region))
-    instance_type = request.args.get('instance_type')
     status = get_status(request.args.get('status'))
-    elastic_ip = request.args.get('elastic_ip')
     nodes = get_nodes(regions,
                       query,
-                      status=status,
-                      instance_type=instance_type,
-                      elastic_ip=elastic_ip)
+                      status=status)
     total_nodes = len(nodes)
     nodes = limit_nodes(nodes, limit=request.args.get('limit'))
     nodes = format_nodes(nodes, format=request.args.get('format'))
@@ -175,7 +167,7 @@ def get_regions(region=None):
     return regions
 
 
-def get_nodes(regions, query=None, status=None, instance_type=None, elastic_ip=None):
+def get_nodes(regions, query=None, status=None):
     nodes = {}
     for region in regions:
         nodes.update(get_nodes_in_region(region))
@@ -183,15 +175,11 @@ def get_nodes(regions, query=None, status=None, instance_type=None, elastic_ip=N
     if status is not None:
         _nodes = {}
         for name, node in nodes.items():
-            if node.get('status') == status:
-                _nodes[name] = node
-        nodes = _nodes
+            value = node.get('status', '')
+            if not value:
+                continue
 
-    if elastic_ip is not None:
-        elastic_ip = to_bool(elastic_ip)
-        _nodes = {}
-        for name, node in nodes.items():
-            if node.get('elastic_ip') == elastic_ip:
+            if value == status:
                 _nodes[name] = node
         nodes = _nodes
 
@@ -202,24 +190,21 @@ def get_nodes(regions, query=None, status=None, instance_type=None, elastic_ip=N
                 _nodes[name] = node
         nodes = _nodes
 
-    if instance_type is not None:
-        _nodes = {}
-        for name, node in nodes.items():
-            if node.get('instance_type') == instance_type:
-                _nodes[name] = node
-        nodes = _nodes
+    for key in ['instance_type', 'group', 'elastic_ip']:
+        search_value = request.args.get(key, None)
+        if search_value is not None:
+            if key in ['elastic_ip']:
+                search_value = to_bool(search_value)
 
-    group = request.args.get('group', None)
-    if group is not None:
-        _nodes = {}
-        for name, node in nodes.items():
-            _group = node.get('group', '')
-            if not _group:
-                continue
+            _nodes = {}
+            for name, node in nodes.items():
+                value = node.get(key, '')
+                if not value:
+                    continue
 
-            if _group == group:
-                _nodes[name] = node
-        nodes = _nodes
+                if value == search_value:
+                    _nodes[name] = node
+            nodes = _nodes
 
     tag_filters = get_tag_filters(request.args)
     for key, value in tag_filters.items():
@@ -352,6 +337,7 @@ def get_nodes_in_region(region):
             'elastic_ip': ip_address in elastic_ips,
             'id': instance_id,
             'instance_type': instance.instance_type,
+            'instance_class': instance.instance_type.split('.')[1],
             'ip_address': ip_address,
             'launch_time': instance.launch_time,
             'name': instance_name,
