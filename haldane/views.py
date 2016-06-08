@@ -316,11 +316,13 @@ def get_nodes_in_region(region):
         if not tags:
             tags = {}
 
-        seatgeek_group = tags.get('seatgeek:autoscaling:groupName', '')
-        group = tags.get('aws:autoscaling:groupName', seatgeek_group)
         bootstrapped = to_bool(tags.get('bootstrapped', ''))
+        default_group_name = None
+        if Config.ALTERNATIVE_AUTOSCALE_TAG_NAME:
+            default_group_name = tags.get(Config.ALTERNATIVE_AUTOSCALE_TAG_NAME, '')
+        group = tags.get('aws:autoscaling:groupName', default_group_name)
 
-        if group == '':
+        if group == '' or group is None:
             group = None
             if not name:
                 name = instance_id
