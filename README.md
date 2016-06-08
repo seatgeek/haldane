@@ -83,7 +83,7 @@ source .env && make test
 - `/_status`: Healthcheck
 - `/nodes/<region>?q=<query>&limit=<limit>&status=<status>&group=<group>`: List all nodes
   - `elastic_ip` (optional): Whether or not to filter to just instances with an elastic_ip
-  - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects.
+  - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects. Defaults to `dict`.
   - `group` (optional): An autoscale group name to filter by
   - `instance_type` (optional): Filter to a specific instance type (eg. `t2.large`)
   - `instance_class` (optional): Filter to a specific instance type (eg. `t2`)
@@ -137,3 +137,7 @@ The following errors are possible:
 ## How it works
 
 This services uses `boto` underneath to provide an api listing all nodes available in a given EC2 account. It is intended to be used as a replacement for hitting the EC2 api directly, as that can be slow at times.
+
+## Caveats
+
+When using the `/nodes` or `/nodes/group` endpoints with a format of `dict`, the response is keyed by the `Name` tag of the ec2 instance. If you have multiple servers with the same value for the `Name` tag, this may result in "hidden" servers. If a server is not running, it will be hidden by default, otherwise it may overwrite the previous entry. This will both be logged in the `haldane` logging output *and* will be surfaced as `meta.hidden_nodes`, regardless of the endpoint being used.

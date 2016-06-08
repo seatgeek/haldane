@@ -91,14 +91,18 @@ def nodes_by_group(group=None):
                       status=status)
     groups = sort_by_group(nodes, group=group)
 
+    total_hidden = 0
     _groups = {}
     for group, nodes in groups.items():
-        _groups[group] = format_nodes(nodes, format=request.args.get('format'))
+        total_nodes = len(nodes)
+        _groups[group] = format_nodes(nodes, format=request.args.get('format', 'dict'))
+        total_hidden += total_nodes - len(_groups[group])
 
     return json_response({
         'meta': {
             'took': time.time() - time_start,
             'total': len(groups),
+            'hidden_nodes': total_hidden,
             'regions': regions,
             'per_page': len(groups)
         },
@@ -117,14 +121,18 @@ def nodes(region=None):
     nodes = get_nodes(regions,
                       query,
                       status=status)
+
     total_nodes = len(nodes)
     nodes = limit_nodes(nodes, limit=request.args.get('limit'))
+    total_not_hidden = len(nodes)
     nodes = format_nodes(nodes, format=request.args.get('format'))
+    total_hidden = total_not_hidden - len(nodes)
 
     return json_response({
         'meta': {
             'took': time.time() - time_start,
             'total': total_nodes,
+            'hidden_nodes': total_hidden,
             'regions': regions,
             'per_page': len(nodes)
         },
@@ -168,26 +176,26 @@ def get_regions(region=None):
 
 
 def get_nodes(regions, query=None, status=None):
-    nodes = {}
+    nodes = []
     for region in regions:
-        nodes.update(get_nodes_in_region(region))
+        nodes.extend(get_nodes_in_region(region))
 
     if status is not None:
-        _nodes = {}
-        for name, node in nodes.items():
+        _nodes = []
+        for node in nodes:
             value = node.get('status', '')
             if not value:
                 continue
 
             if value == status:
-                _nodes[name] = node
+                _nodes.append(node)
         nodes = _nodes
 
     if query is not None:
-        _nodes = {}
-        for name, node in nodes.items():
-            if query in name:
-                _nodes[name] = node
+        _nodes = []
+        for node in nodes:
+            if query in node['name']:
+                _nodes.append(node)
         nodes = _nodes
 
     for key in ['instance_type', 'instance_class', 'group', 'elastic_ip']:
@@ -196,26 +204,26 @@ def get_nodes(regions, query=None, status=None):
             if key in ['elastic_ip']:
                 search_value = to_bool(search_value)
 
-            _nodes = {}
-            for name, node in nodes.items():
+            _nodes = []
+            for node in nodes:
                 value = node.get(key, '')
                 if not value:
                     continue
 
                 if value == search_value:
-                    _nodes[name] = node
+                    _nodes.append(node)
             nodes = _nodes
 
     tag_filters = get_tag_filters(request.args)
     for key, value in tag_filters.items():
-        _nodes = {}
-        for name, node in nodes.items():
+        _nodes = []
+        for node in nodes:
             tag = node.get('tags', {}).get(key)
             if not tag:
                 continue
 
             if value in tag:
-                _nodes[name] = node
+                _nodes.append(node)
         nodes = _nodes
 
     return nodes
@@ -235,34 +243,49 @@ def limit_nodes(nodes, limit=None):
 
     count = 0
     limit = int(limit)
-    _nodes = {}
-    for name, node in nodes.items():
+    _nodes = []
+    for node in nodes:
         if count == limit:
             break
 
         count += 1
-        _nodes[name] = node
+        _nodes.append(node)
     return _nodes
 
 
 def format_nodes(nodes, format=None):
     if format == 'list':
-        return nodes.values()
+        return nodes
 
-    return nodes
+    _nodes = {}
+    for node in nodes:
+        instance_name = node['name']
+        if instance_name in _nodes:
+            existing = _nodes[instance_name]
+            logger.warning('duplicate name collission: {0}'.format(instance_name))
+            logger.warning('existing running instance id: {0}'.format(existing['id']))
+            logger.warning('new instance id: {0}'.format(node['id']))
+            if node['status'] == 'running':
+                logger.warning('hiding existing resource {0} in state {1}'.format(existing['id'], existing['status']))
+            else:
+                logger.warning('hiding new resource {0} in state {1}'.format(node['id'], node['status']))
+                continue
+        _nodes[instance_name] = node
+
+    return sorted_dict(_nodes)
 
 
 def sort_by_group(nodes, group=None):
     groups = {
-        'None': {}
+        'None': []
     }
-    for name, node in nodes.items():
+    for node in nodes:
         if node.get('group') is None:
-            groups['None'][name] = node
+            groups['None'].append(node)
         else:
             if node.get('group') not in groups:
-                groups[node.get('group')] = {}
-            groups[node.get('group')][name] = node
+                groups[node.get('group')] = []
+            groups[node.get('group')].append(node)
 
     if group is not None:
         if group in groups:
@@ -295,7 +318,7 @@ def get_nodes_in_region(region):
 
     elastic_ips = get_elastic_ips(conn, region)
 
-    instances = {}
+    instances = []
     reservations = conn.get_all_reservations()
     instances_for_region = [i for r in reservations for i in r.instances]
     for instance in instances_for_region:
@@ -329,8 +352,6 @@ def get_nodes_in_region(region):
             name = group + '-' + instance_id
 
         instance_name = name.replace('_', '-').strip()
-        if instance_name in instances and instance.state != 'running':
-            continue
 
         data = {
             'availability_zone': instance.placement,
@@ -352,6 +373,6 @@ def get_nodes_in_region(region):
         for key in Config.BOOLEAN_AWS_TAG_ATTRIBUTES:
             data[key] = to_bool(tags.get(key, ''))
 
-        instances[instance_name] = sorted_dict(data)
+        instances.append(sorted_dict(data))
 
-    return sorted_dict(instances)
+    return instances
