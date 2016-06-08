@@ -316,7 +316,6 @@ def get_nodes_in_region(region):
         if not tags:
             tags = {}
 
-        bootstrapped = to_bool(tags.get('bootstrapped', ''))
         default_group_name = None
         if Config.ALTERNATIVE_AUTOSCALE_TAG_NAME:
             default_group_name = tags.get(Config.ALTERNATIVE_AUTOSCALE_TAG_NAME, '')
@@ -333,9 +332,8 @@ def get_nodes_in_region(region):
         if instance_name in instances and instance.state != 'running':
             continue
 
-        instances[instance_name] = sorted_dict({
+        data = {
             'availability_zone': instance.placement,
-            'bootstrapped': bootstrapped,
             'group': group,
             'elastic_ip': ip_address in elastic_ips,
             'id': instance_id,
@@ -349,6 +347,11 @@ def get_nodes_in_region(region):
             'status': instance.state,
             'tags': tags,
             'vpc_id': instance.vpc_id,
-        })
+        }
+
+        for key in Config.BOOLEAN_AWS_TAG_ATTRIBUTES:
+            data[key] = to_bool(tags.get(key, ''))
+
+        instances[instance_name] = sorted_dict(data)
 
     return sorted_dict(instances)
