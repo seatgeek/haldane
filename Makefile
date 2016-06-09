@@ -25,4 +25,4 @@ server: ## starts the built-in server
 
 .PHONY: gunicorn
 gunicorn: ## starts the gunicorn server
-	$(GUNICORN) -w 2 -b :$(PORT) haldane:make_application\(\)
+	$(GUNICORN) -w 2 -b :$(PORT) --logger-class haldane.glogging.Logger haldane:make_application\(\)
