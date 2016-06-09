@@ -3,8 +3,8 @@ import functools
 from flask import request
 from flask import Response
 
-from haldane.config import Config
-from haldane.log import getLogger
+from app.config import Config
+from app.log import getLogger
 
 
 def skip_check():

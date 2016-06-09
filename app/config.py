@@ -1,5 +1,5 @@
 import os
-from haldane.utils import to_bool
+from app.utils import to_bool
 
 
 class Config(object):

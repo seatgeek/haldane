@@ -12,16 +12,16 @@ from flask import jsonify
 from flask import request
 from flask import Response
 
-from haldane.basic_auth import requires_auth
-from haldane.config import Config
-from haldane.log import getLogger
-from haldane.log import getRequestLogger
-from haldane.log import log_request
-from haldane.ssl_279 import _ssl
-from haldane.utils import set_retrieve
-from haldane.utils import sorted_dict
-from haldane.utils import sorted_json
-from haldane.utils import to_bool
+from app.basic_auth import requires_auth
+from app.config import Config
+from app.log import getLogger
+from app.log import getRequestLogger
+from app.log import log_request
+from app.ssl_279 import _ssl
+from app.utils import set_retrieve
+from app.utils import sorted_dict
+from app.utils import sorted_json
+from app.utils import to_bool
 
 _ssl  # hack to avoid "Imported but not used" validation issue
 blueprint_http = Blueprint('blueprint_http', __name__)

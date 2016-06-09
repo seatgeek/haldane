@@ -1,4 +1,4 @@
-from haldane import make_application
+from app import make_application
 
 application = make_application()
 
