@@ -19,6 +19,9 @@ import sys
 import logging
 import logging.config
 
+from werkzeug._internal import _log
+from werkzeug.serving import WSGIRequestHandler
+
 
 def _to_bool(s):
     try:
@@ -42,11 +45,11 @@ LOG_SETTINGS = {
     'disable_existing_loggers': True,
     'formatters': {
         'normal': {
-            'format': "[%(asctime)s] %(name)s - %(levelname)s - %(message)s",
+            'format': "[%(asctime)s] %(name)s [pid:%(process)d] - %(levelname)s - %(message)s",
             'datefmt': "%Y-%m-%d %H:%M:%S"
         },
         'werkzeug': {
-            'format': "%(message)s",
+            'format': "[%(asctime)s] %(name)s [pid:%(process)d] - %(levelname)s - %(message)s",
             'datefmt': "%Y-%m-%d %H:%M:%S"
         },
     },
@@ -211,12 +214,29 @@ def log_request(request, response, logger=None):
         return
 
     now = datetime.datetime.utcnow()
-    message = '{0} - - [{1}] "{2} {3} {4}" {5} -'
+    message = 'remote-addr={0} method={1} path={2} protocol={3} status_code={4}'
     logger.info(message.format(
         request.environ.get("REMOTE_ADDR"),
-        now.strftime("%d/%b/%Y:%H:%M:%S"),
         request.method,
         request.path,
         request.environ.get("SERVER_PROTOCOL"),
         response.status_code,
     ))
+
+
+def werkzeug_log(self, type, message, *args):
+    _log(type, 'remote-addr={0} {1}\n'.format(
+         self.address_string(),
+         message % args))
+
+
+def werkzeug_log_request(self, code='-', size='-'):
+    self.log('info', 'method={0} path={1} protocol={2} status_code={3}'.format(
+        self.command,
+        self.path,
+        self.request_version,
+        code))
+
+
+WSGIRequestHandler.log = werkzeug_log
+WSGIRequestHandler.log_request = werkzeug_log_request
