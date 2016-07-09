@@ -198,7 +198,7 @@ def get_nodes(regions, query=None, status=None):
                 _nodes.append(node)
         nodes = _nodes
 
-    for key in ['instance_type', 'instance_class', 'group', 'elastic_ip']:
+    for key in ['id', 'instance_type', 'instance_class', 'group', 'elastic_ip']:
         search_value = request.args.get(key, None)
         if search_value is not None:
             if key in ['elastic_ip']:
