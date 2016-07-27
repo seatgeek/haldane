@@ -10,7 +10,14 @@ include common.Makefile
 
 .PHONY: requirements
 requirements: ## installs system requirements
-	sudo apt-get install -qq -y --force-yes libevent-dev > /dev/null
+ifeq ($(BREW),)
+ifndef TRAVIS
+	$(MAKE) aptfile
+endif
+else
+	brew tap | grep -q '^homebrew/bundle$$' || brew tap homebrew/bundle
+	brew bundle
+endif
 
 .PHONY: test
 test: validate-amqp-dispatcher-config ## runs tests

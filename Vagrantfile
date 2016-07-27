@@ -4,6 +4,24 @@ require 'json'
 
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'vmware_fusion'
 
+def error(message)
+  puts "\033[0;31m#{message}\033[0m"
+end
+
+SSH_KEY = File.expand_path(ENV.fetch('VAGRANT_SSH_KEY', '~/.ssh/id_rsa'))
+if !File.exist?(SSH_KEY)
+  error "ERROR: Please create an ssh key at the path #{SSH_KEY}"
+  exit 1
+end
+
+if File.readlines(SSH_KEY).grep(/ENCRYPTED/).size > 0
+  error "ERROR: GitHub SSH Key at #{SSH_KEY} contains a passphrase."
+  error 'You need to generate a new key without a passphrase manually.'
+  error 'See the vm documentation for more details.'
+  error 'You can also override it\'s location with the environment variable VAGRANT_SSH_KEY'
+  exit 1
+end
+
 git_name = %x(git config --get user.name).strip!
 git_email = %x(git config --get user.email).strip!
 github_user = %x(git config --get github.user).strip!
@@ -18,14 +36,7 @@ apt-get update > /dev/null
 
 echo "- installing base requirements"
 export DEBIAN_FRONTEND=noninteractive
-apt-get install -qq -y --force-yes build-essential git-core curl > /dev/null
-apt-get install -qq -y --force-yes python-dev python-pip python-crypto > /dev/null
-
-command -v /usr/local/bin/pip > /dev/null || {
-  echo "- installing proper version of pip"
-  easy_install pip > /dev/null
-  pip install pip==1.4.1 > /dev/null
-}
+apt-get install -qq -y --force-yes git-core > /dev/null
 
 echo "- ensuring proper git config"
 su - vagrant -c 'git config --global user.name "#{git_name}"'
@@ -73,23 +84,11 @@ EOF
 
 cd /vagrant
 
-echo "- installing server requirements for this service"
-make requirements
-
-echo "- installing external service dependencies"
-make services
-
-echo "- setting up databases"
-make database
-
-echo "- setting up the virtualenv"
-make venv
+echo "- installing the service"
+make install
 
 echo "- running tests"
 source .env.test && make test
-
-echo "- starting services"
-make restart_services
 
 echo -e "\n- ALL CLEAR! SSH access via 'vagrant ssh'."
 echo "  Perform all git work on your local box. This box has no access to the nodes, outside of bootstrapping."
@@ -100,11 +99,21 @@ SCRIPT
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.ssh.forward_agent = true
   config.vm.box = "bento/ubuntu-14.04"
   config.vm.synced_folder ".", "/vagrant", type: "nfs", mount_options: ['actimeo=2']
-  config.ssh.forward_agent = true
-
+  config.vm.network "private_network", type: "dhcp"
   config.vm.network "forwarded_port", guest: 5000, host: 5000
+  config.vm.hostname = "haldane.service.seatgeek.dev"
+
+  if Vagrant.has_plugin?('vagrant-hostmanager')
+    config.hostmanager.enabled = true
+    config.hostmanager.ignore_private_ip = false
+    config.hostmanager.include_offline = true
+    config.hostmanager.manage_guest = true
+    config.hostmanager.manage_host = true
+    config.vm.network "private_network", ip: "10.254.0.18"
+  end
 
   config.vm.provider "virtualbox" do |v, override|
     v.customize ["modifyvm", :id, "--rtcuseutc", "on"]
@@ -118,11 +127,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     v.vmx["numvcpus"] = "2"
   end
 
-  if File.exists?(File.join(Dir.home, ".ssh", "id_rsa"))
-    ssh_key = File.read(File.join(Dir.home, ".ssh", "id_rsa"))
+  if File.exists?(SSH_KEY)
+    ssh_key = File.read(SSH_KEY)
     config.vm.provision :shell, :inline => "echo 'Copying local GitHub SSH Key to VM for provisioning...' && mkdir -p /root/.ssh && echo '#{ssh_key}' > /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa"
+    config.vm.provision :shell, :inline => "echo 'Copying local GitHub SSH Key to VM for provisioning...' && mkdir -p /home/vagrant/.ssh && echo '#{ssh_key}' > /home/vagrant/.ssh/id_rsa && chmod 600 /home/vagrant/.ssh/id_rsa && chown vagrant:vagrant /home/vagrant/.ssh/id_rsa"
   else
-    raise Vagrant::Errors::VagrantError, "\n\nERROR: GitHub SSH Key not found at ~/.ssh/id_rsa.\nYou can generate this key manually\n\n"
+    raise Vagrant::Errors::VagrantError, "\n\nERROR: GitHub SSH Key not found at ~/.ssh/id_rsa.\nYou can generate this key manually.\nYou can also override it with the environment variable VAGRANT_SSH_KEY\n\n"
   end
 
   config.vm.provision :shell do |shell|
