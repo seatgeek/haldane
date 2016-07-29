@@ -19,13 +19,6 @@ else
 	brew bundle
 endif
 
-.PHONY: test
-test: validate-amqp-dispatcher-config ## runs tests
-	export SG_ENV=test && $(NOSE)
-
-.PHONY: travis
-travis: test ## runs tests for travis
-
 .PHONY: server
 server: ## starts the built-in server
 	export DEBUG=1 && $(PYTHON) application.py

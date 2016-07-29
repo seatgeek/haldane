@@ -67,15 +67,26 @@ The webservice will now be running and exposed to the host machine at `http://lo
 
 > Note that you may wish to change the configuration in use. You can do so by modifying the .env.test file with your configuration.
 
-## Tests
+## Configuration
 
-All tests run with `SG_ENV=test`. You can run tests within the vm:
+All configuration is set via environment variables. The following environment variables are available for use:
 
-```bash
-# a .env file does not exist, you will need to create one
-vagrant ssh
-source .env && make test
-```
+- `ALLOWED_IPS`: (Default: None) A comma-separated list of ip addresses that can basic authentication.
+- `ALTERNATIVE_AUTOSCALE_TAG_NAME`: (Default: None) A tag that can be used as an alternative to the AWS group name to categorize instances.
+- `AWS_ACCESS_KEY_ID`: (Default: None) An AWS access key id
+- `AWS_REGIONS`: (Default: us-east-1) A comma-separated list of regions to query for.
+- `AWS_SECRET_ACCESS_KEY`: (Default: None) An AWS secret access key
+- `BASIC_AUTH`: (Default: None) A list of basic auth user/password combinations. The format for each is `username:password`.
+- `BOOLEAN_AWS_TAG_ATTRIBUTES`: (Default: None) A comma-separated list of instance tags that will be pulled out as top-level instance attributes set and converted into booleans.
+- `BUGSNAG_API_KEY`: (Default: None) An api key for reporting errors to bugsnag.
+- `CACHE_EXPIRATION`: (Default: `180`) Time in seconds until a cached AWS api retrieval expires.
+- `CACHE_SIZE`: (Default: `1024`) Max number of items to cache in the LRU cache. Can be safely set to 2.
+- `DEBUG`: (Default: `0`) Whether to turn on debug mode or not.
+- `LISTEN_INTERFACE`: (Default: `0.0.0.0`) The interface which the server will bind to.
+- `PORT`: (Default: `5000`) Server port.
+- `SENTRY_DSN`: (Default: None) An DSN for reporting errors to sentry.
+
+The AWS policy is fairly small, and an `iam-profile.json` is provided in this repository in the case that you wish to lock down permissions to only those necessary.
 
 ## Endpoints:
 
