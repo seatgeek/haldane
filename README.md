@@ -97,6 +97,7 @@ The AWS policy is fairly small, and an `iam-profile.json` is provided in this re
   - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects. Defaults to `dict`.
   - `group` (optional): An autoscale group name to filter by
   - `id` (optional): An instance id to filter by (eg. `i-21e750d9`)
+  - `image_id` (optional): An image id to filter by (eg. `ami-123abc4d`)
   - `instance_type` (optional): Filter to a specific instance type (eg. `t2.large`)
   - `instance_class` (optional): Filter to a specific instance type (eg. `t2`)
   - `limit` (optional): An integer to limit the resultset by
@@ -108,6 +109,7 @@ The AWS policy is fairly small, and an `iam-profile.json` is provided in this re
   - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects.
   - `group` (optional): An autoscale group name to filter by
   - `id` (optional): An instance id to filter by (eg. `i-21e750d9`)
+  - `image_id` (optional): An image id to filter by (eg. `ami-123abc4d`)
   - `instance_type` (optional): Filter to a specific instance type (eg. `t2.large`)
   - `instance_class` (optional): Filter to a specific instance type (eg. `t2`)
   - `query` (optional): Substring to search node names by before returning the resultset

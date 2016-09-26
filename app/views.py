@@ -198,7 +198,15 @@ def get_nodes(regions, query=None, status=None):
                 _nodes.append(node)
         nodes = _nodes
 
-    for key in ['id', 'instance_type', 'instance_class', 'group', 'elastic_ip']:
+    search_keys = [
+        'id',
+        'image_id',
+        'instance_type',
+        'instance_class',
+        'group',
+        'elastic_ip',
+    ]
+    for key in search_keys:
         search_value = request.args.get(key, None)
         if search_value is not None:
             if key in ['elastic_ip']:
@@ -358,6 +366,7 @@ def get_nodes_in_region(region):
             'group': group,
             'elastic_ip': ip_address in elastic_ips,
             'id': instance_id,
+            'image_id': instance.image_id,
             'instance_type': instance.instance_type,
             'instance_class': instance.instance_type.split('.')[0],
             'ip_address': ip_address,
