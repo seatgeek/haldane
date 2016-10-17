@@ -238,8 +238,30 @@ def get_nodes(regions, query=None, status=None):
                     _nodes.append(node)
             nodes = _nodes
 
-    tag_filters = get_tag_filters(request.args)
-    for key, value in tag_filters.items():
+    exact_filters, list_filters, substring_filters = get_tag_filters(
+        request.args)
+
+    for key, value in exact_filters.items():
+        _nodes = []
+        for node in nodes:
+            tag = node.get('tags', {}).get(key)
+            if not tag:
+                continue
+
+            if value == tag:
+                _nodes.append(node)
+        nodes = _nodes
+    for key, value in list_filters.items():
+        _nodes = []
+        for node in nodes:
+            tag = node.get('tags', {}).get(key)
+            if not tag:
+                continue
+
+            if value in tag.split(','):
+                _nodes.append(node)
+        nodes = _nodes
+    for key, value in substring_filters.items():
         _nodes = []
         for node in nodes:
             tag = node.get('tags', {}).get(key)
@@ -255,10 +277,18 @@ def get_nodes(regions, query=None, status=None):
 
 def get_tag_filters(args):
     tags = {}
+    tags_in_list = {}
+    tags_substring = {}
     for key, value in args.items():
-        if key.startswith('tags.'):
+        if key.startswith('tags.substring.'):
+            tags_substring[key[15:]] = value
+        elif key.startswith('tags.in-list.'):
+            tags_in_list[key[13:]] = value
+        elif key.startswith('tags.exact.'):
+            tags[key[11:]] = value
+        elif key.startswith('tags.'):
             tags[key[5:]] = value
-    return tags
+    return tags, tags_in_list, tags_substring
 
 
 def limit_nodes(nodes, limit=None):
@@ -286,13 +316,19 @@ def format_nodes(nodes, format=None):
         instance_name = node['name']
         if instance_name in _nodes:
             existing = _nodes[instance_name]
-            logger.warning('duplicate name collission: {0}'.format(instance_name))
-            logger.warning('existing running instance id: {0}'.format(existing['id']))
+            logger.warning('duplicate name collission: {0}'.format(
+                instance_name))
+            logger.warning('existing running instance id: {0}'.format(
+                existing['id']))
             logger.warning('new instance id: {0}'.format(node['id']))
             if node['status'] == 'running':
-                logger.warning('hiding existing resource {0} in state {1}'.format(existing['id'], existing['status']))
+                logger.warning('hiding existing resource {0} in state {1}'.format(  # noqa
+                    existing['id'],
+                    existing['status']))
             else:
-                logger.warning('hiding new resource {0} in state {1}'.format(node['id'], node['status']))
+                logger.warning('hiding new resource {0} in state {1}'.format(
+                    node['id'],
+                    node['status']))
                 continue
         _nodes[instance_name] = node
 

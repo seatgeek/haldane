@@ -116,13 +116,23 @@ The AWS policy is fairly small, and an `iam-profile.json` is provided in this re
   - `region` (optional): Filter to a specific region
   - `status` (optional): Filter to specific node status
 
-You can also filter by tags by using the `tags.TAG_NAME` querystring pattern as follows:
+You can also filter by tags by using the `tags.FILTER.TAG_NAME` querystring pattern as follows:
 
 ```bash
-curl http://localhost:5000/nodes?tags.bootstrapped=true&tags.Name=admin
+curl http://localhost:5000/nodes?tags.exact.bootstrapped=true&tags.substring.Name=admin
 ```
 
-Tag filtering is performed via a substring match *after* retrieving results from the EC2 API.
+Tag filtering is performed *after* retrieving results from the EC2 API. The following are valid filters:
+
+- `exact`: performs an exact match on the value of the tag name
+- `in-list`: splits the tag value by comma and verifies that the passed value is in the resulting list
+- `substring`: performs a substring match on the value of the tag name
+
+You may also specify an exact match filter when omitting the `FILTER` section like so:
+
+```bash
+curl http://localhost:5000/nodes?tags.bootstrapped=true
+```
 
 Valid `status` values are as follows:
 
