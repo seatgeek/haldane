@@ -75,7 +75,23 @@ def log_http_request(response):
 @blueprint_http.route('/')
 @blueprint_http.route('/_status')
 def status():
-    return json_response({'status': 'ok'})
+    return json_response({
+        '_service': {
+            '_settings': {
+                'regions': Config.AWS_REGIONS,
+                'cache': {
+                    'expiration': Config.CACHE_EXPIRATION,
+                    'size': Config.CACHE_SIZE
+                }
+            },
+            'environment': 'dev' if Config.DEBUG else 'prod',
+            'name': 'haldane'
+        },
+        'meta': {
+            'status': 200
+        },
+        'ok': True
+    })
 
 
 @blueprint_http.route('/nodes/group')
