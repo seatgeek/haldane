@@ -6,7 +6,8 @@
             "Effect": "Allow",
             "Action": [
                 "ec2:DescribeAddresses",
-                "ec2:DescribeInstances"
+                "ec2:DescribeInstances",
+                "ec2:DescribeImages"
             ],
             "Resource": [
                 "*"

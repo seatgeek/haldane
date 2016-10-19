@@ -115,6 +115,11 @@ The AWS policy is fairly small, and an `iam-profile.json` is provided in this re
   - `query` (optional): Substring to search node names by before returning the resultset
   - `region` (optional): Filter to a specific region
   - `status` (optional): Filter to specific node status
+- `/amis?q=<query>&limit=<limit>`: List all amis owned by the user specified by the AWS credentials.
+  - `format` (optional): If set to `list`, turns ami attributes from an object indexed by the name key to a list of those objects.
+  - `id` (optional): An image id to filter by (eg. `ami-21e750d9`)
+  - `query` (optional): Substring to search ami names by before returning the resultset
+  - `region` (optional): Filter to a specific region
 
 You can also filter by tags by using the `tags.FILTER.TAG_NAME` querystring pattern as follows:
 

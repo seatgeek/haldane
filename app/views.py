@@ -93,6 +93,38 @@ def status():
         'ok': True
     })
 
+@blueprint_http.route('/amis')
+@requires_auth
+def amis():
+    time_start = time.time()
+    query = request.args.get('query', request.args.get('q'))
+    regions = get_regions(request.args.get('region'))
+    amis = get_amis(regions, query)
+
+    total_amis = len(amis)
+    amis = limit_elements(amis, limit=request.args.get('limit'))
+    total_not_hidden = len(amis)
+    amis = format_elements(amis, format=request.args.get('format'))
+    total_hidden = total_not_hidden - len(amis)
+
+    return json_response({
+        'meta': {
+            'took': time.time() - time_start,
+            'total': total_amis,
+            'hidden_nodes': total_hidden,
+            'regions': regions,
+            'per_page': len(amis)
+        },
+        'amis': amis,
+    })
+
+def get_amis(regions, query=None):
+    amis = []
+    for region in regions:
+        amis.extend(get_amis_in_region(region))
+
+    return filter_elements(amis, query=query)
+
 
 @blueprint_http.route('/nodes/group')
 @blueprint_http.route('/nodes/group/<group>')
@@ -111,7 +143,7 @@ def nodes_by_group(group=None):
     _groups = {}
     for group, nodes in groups.items():
         total_nodes = len(nodes)
-        _groups[group] = format_nodes(nodes, format=request.args.get('format', 'dict'))
+        _groups[group] = format_elements(nodes, format=request.args.get('format', 'dict'))
         total_hidden += total_nodes - len(_groups[group])
 
     return json_response({
@@ -139,9 +171,9 @@ def nodes(region=None):
                       status=status)
 
     total_nodes = len(nodes)
-    nodes = limit_nodes(nodes, limit=request.args.get('limit'))
+    nodes = limit_elements(nodes, limit=request.args.get('limit'))
     total_not_hidden = len(nodes)
-    nodes = format_nodes(nodes, format=request.args.get('format'))
+    nodes = format_elements(nodes, format=request.args.get('format'))
     total_hidden = total_not_hidden - len(nodes)
 
     return json_response({
@@ -154,6 +186,118 @@ def nodes(region=None):
         },
         'nodes': nodes
     })
+
+
+def filter_elements(elements, query=None, status=None):
+    if status is not None:
+        _elements = []
+        for element in elements:
+            value = element.get('status', '')
+            if not value:
+                continue
+
+            if value == status:
+                _elements.append(element)
+        elements = _elements
+
+    if query is not None:
+        _elements = []
+        for element in elements:
+            value = element.get('name', '')
+            if not value:
+                continue
+
+            if query in value:
+                _elements.append(element)
+        elements = _elements
+
+    exact_filters, list_filters, substring_filters = get_tag_filters(
+        request.args)
+
+    search_keys = [
+        'id',
+        'image_id',
+        'instance_type',
+        'instance_class',
+        'group',
+        'elastic_ip',
+    ]
+    for key in search_keys:
+        search_value = request.args.get(key, None)
+        if search_value is not None:
+            if key in ['elastic_ip']:
+                search_value = to_bool(search_value)
+
+            _elements = []
+            for element in elements:
+                value = element.get(key, '')
+                if not value:
+                    continue
+
+                if value == search_value:
+                    _elements.append(element)
+            elements = _elements
+
+    for key, value in exact_filters.items():
+        _elements = []
+        for element in elements:
+            tag = element.get('tags', {}).get(key)
+            if not tag:
+                continue
+
+            if value == tag:
+                _elements.append(element)
+        elements = _elements
+    for key, value in list_filters.items():
+        _elements = []
+        for element in elements:
+            tag = element.get('tags', {}).get(key)
+            if not tag:
+                continue
+
+            if value in tag.split(','):
+                _elements.append(element)
+        elements = _elements
+    for key, value in substring_filters.items():
+        _elements = []
+        for element in elements:
+            tag = element.get('tags', {}).get(key)
+            if not tag:
+                continue
+
+            if value in tag:
+                _elements.append(element)
+        elements = _elements
+
+    return elements
+
+
+def format_elements(elements, format=None):
+    if format == 'list':
+        return elements
+
+    _elements = {}
+    for element in elements:
+        name = element['name']
+        if name in _elements:
+            existing = _elements[name]
+            logger.warning('duplicate name collission: {0}'.format(
+                name))
+            logger.warning('existing running instance id: {0}'.format(
+                existing['id']))
+            logger.warning('new instance id: {0}'.format(element['id']))
+            if element.get('status', '') == 'running':
+                logger.warning('hiding existing resource {0} in state {1}'.format(  # noqa
+                    existing['id'],
+                    existing.get('status', '')))
+            else:
+                logger.warning('hiding new resource {0} in state {1}'.format(
+                    element['id'],
+                    element.get('status', '')))
+                continue
+        _elements[name] = element
+
+    return sorted_dict(_elements)
 
 
 def json_response(data):
@@ -196,83 +340,7 @@ def get_nodes(regions, query=None, status=None):
     for region in regions:
         nodes.extend(get_nodes_in_region(region))
 
-    if status is not None:
-        _nodes = []
-        for node in nodes:
-            value = node.get('status', '')
-            if not value:
-                continue
-
-            if value == status:
-                _nodes.append(node)
-        nodes = _nodes
-
-    if query is not None:
-        _nodes = []
-        for node in nodes:
-            if query in node['name']:
-                _nodes.append(node)
-        nodes = _nodes
-
-    search_keys = [
-        'id',
-        'image_id',
-        'instance_type',
-        'instance_class',
-        'group',
-        'elastic_ip',
-    ]
-    for key in search_keys:
-        search_value = request.args.get(key, None)
-        if search_value is not None:
-            if key in ['elastic_ip']:
-                search_value = to_bool(search_value)
-
-            _nodes = []
-            for node in nodes:
-                value = node.get(key, '')
-                if not value:
-                    continue
-
-                if value == search_value:
-                    _nodes.append(node)
-            nodes = _nodes
-
-    exact_filters, list_filters, substring_filters = get_tag_filters(
-        request.args)
-
-    for key, value in exact_filters.items():
-        _nodes = []
-        for node in nodes:
-            tag = node.get('tags', {}).get(key)
-            if not tag:
-                continue
-
-            if value == tag:
-                _nodes.append(node)
-        nodes = _nodes
-    for key, value in list_filters.items():
-        _nodes = []
-        for node in nodes:
-            tag = node.get('tags', {}).get(key)
-            if not tag:
-                continue
-
-            if value in tag.split(','):
-                _nodes.append(node)
-        nodes = _nodes
-    for key, value in substring_filters.items():
-        _nodes = []
-        for node in nodes:
-            tag = node.get('tags', {}).get(key)
-            if not tag:
-                continue
-
-            if value in tag:
-                _nodes.append(node)
-        nodes = _nodes
-
-    return nodes
+    return filter_elements(nodes, query=query, status=status)
 
 
 def get_tag_filters(args):
@@ -291,48 +359,20 @@ def get_tag_filters(args):
     return tags, tags_in_list, tags_substring
 
 
-def limit_nodes(nodes, limit=None):
+def limit_elements(elements, limit=None):
     if limit is None:
-        return nodes
+        return elements
 
     count = 0
     limit = int(limit)
-    _nodes = []
-    for node in nodes:
+    _elements = []
+    for element in elements:
         if count == limit:
             break
 
         count += 1
-        _nodes.append(node)
-    return _nodes
-
-
-def format_nodes(nodes, format=None):
-    if format == 'list':
-        return nodes
-
-    _nodes = {}
-    for node in nodes:
-        instance_name = node['name']
-        if instance_name in _nodes:
-            existing = _nodes[instance_name]
-            logger.warning('duplicate name collission: {0}'.format(
-                instance_name))
-            logger.warning('existing running instance id: {0}'.format(
-                existing['id']))
-            logger.warning('new instance id: {0}'.format(node['id']))
-            if node['status'] == 'running':
-                logger.warning('hiding existing resource {0} in state {1}'.format(  # noqa
-                    existing['id'],
-                    existing['status']))
-            else:
-                logger.warning('hiding new resource {0} in state {1}'.format(
-                    node['id'],
-                    node['status']))
-                continue
-        _nodes[instance_name] = node
-
-    return sorted_dict(_nodes)
+        _elements.append(element)
+    return _elements
 
 
 def sort_by_group(nodes, group=None):
@@ -354,6 +394,59 @@ def sort_by_group(nodes, group=None):
             groups = {}
 
     return groups
+
+
+@lru.lru_cache_function(
+    max_size=Config.CACHE_SIZE,
+    expiration=Config.CACHE_EXPIRATION)
+def get_amis_in_region(region):
+    conn = boto.ec2.connect_to_region(
+        region,
+        aws_access_key_id=Config.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=Config.AWS_SECRET_ACCESS_KEY,
+    )
+
+    if conn is None:
+        return {}
+
+    images = conn.get_all_images(owners=['self'])
+    amis = []
+    for image in images:
+        ami = {
+            'architecture': image.architecture,
+            'billing_products': image.billing_products,
+            'creationDate': image.creationDate,
+            'description': image.description,
+            'hypervisor': image.hypervisor,
+            'id': image.id,
+            'instance_lifecycle': image.instance_lifecycle,
+            'is_public': image.is_public,
+            'item': image.item,
+            'kernel_id': image.kernel_id,
+            'location': image.location,
+            'name': image.name,
+            'ownerId': image.ownerId,
+            'owner_alias': image.owner_alias,
+            'owner_id': image.owner_id,
+            'platform': image.platform,
+            'product_codes': image.product_codes,
+            'ramdisk_id': image.ramdisk_id,
+            'region': image.region.name,
+            'root_device_name': image.root_device_name,
+            'root_device_type': image.root_device_type,
+            'sriov_net_support': image.sriov_net_support,
+            'state': image.state,
+            'tags': image.tags,
+            'type': image.type,
+            'virtualization_type': image.virtualization_type,
+        }
+        block_device_mapping = {}
+        for mount, block_device in image.block_device_mapping.items():
+            block_device_mapping[mount] = vars(block_device)
+            del block_device_mapping[mount]['connection']
+        ami['block_device_mapping'] = block_device_mapping
+        amis.append(ami)
+    return amis
 
 
 @lru.lru_cache_function(
