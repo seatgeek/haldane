@@ -93,33 +93,31 @@ The AWS policy is fairly small, and an `iam-profile.json` is provided in this re
 - `/`: Healthcheck
 - `/_status`: Healthcheck
 - `/nodes/<region>?q=<query>&limit=<limit>&status=<status>&group=<group>`: List all nodes
-  - `elastic_ip` (optional): Whether or not to filter to just instances with an elastic_ip
   - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects. Defaults to `dict`.
-  - `group` (optional): An autoscale group name to filter by
-  - `id` (optional): An instance id to filter by (eg. `i-21e750d9`)
-  - `image_id` (optional): An image id to filter by (eg. `ami-123abc4d`)
-  - `instance_type` (optional): Filter to a specific instance type (eg. `t2.large`)
-  - `instance_class` (optional): Filter to a specific instance type (eg. `t2`)
   - `limit` (optional): An integer to limit the resultset by
-  - `query` (optional): Substring to search node names by before returning the resultset
-  - `region` (optional): Filter to a specific region
-  - `status` (optional): Filter to specific node status
+  - `query` (optional): Substring to search the `name` field by before returning the resultset
 - `/nodes/group/<group>?region=<region>&query=<query>&status=<status>`: List all nodes grouped by autoscale group
-  - `elastic_ip` (optional): Whether or not to filter to just instances with an elastic_ip
   - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects.
-  - `group` (optional): An autoscale group name to filter by
-  - `id` (optional): An instance id to filter by (eg. `i-21e750d9`)
-  - `image_id` (optional): An image id to filter by (eg. `ami-123abc4d`)
-  - `instance_type` (optional): Filter to a specific instance type (eg. `t2.large`)
-  - `instance_class` (optional): Filter to a specific instance type (eg. `t2`)
   - `query` (optional): Substring to search node names by before returning the resultset
-  - `region` (optional): Filter to a specific region
-  - `status` (optional): Filter to specific node status
 - `/amis?q=<query>&limit=<limit>`: List all amis owned by the user specified by the AWS credentials.
   - `format` (optional): If set to `list`, turns ami attributes from an object indexed by the name key to a list of those objects.
   - `id` (optional): An image id to filter by (eg. `ami-21e750d9`)
   - `query` (optional): Substring to search ami names by before returning the resultset
   - `region` (optional): Filter to a specific region
+
+The following attribute filters are avalable for the `/nodes` and `/nodes/group` endpoints:
+
+- `availability_zone` (optional): An availability zone to filter by (eg. `us-east-1a`)
+- `elastic_ip` (optional): Whether or not to filter to just instances with an elastic_ip
+- `group` (optional): An autoscale group name to filter by
+- `id` (optional): An instance id to filter by (eg. `i-21e750d9`)
+- `image_id` (optional): An image id to filter by (eg. `ami-123abc4d`)
+- `image_name` (optional): An image name to filter by (eg. `BaseAMI`)
+- `instance_type` (optional): Filter to a specific instance type (eg. `t2.large`)
+- `instance_class` (optional): Filter to a specific instance type (eg. `t2`)
+- `name` (optional): A name to filter by (eg. `graphite-ec2-01`)
+- `region` (optional): Filter to a specific region (eg. `us-east-1`)
+- `status` (optional): Filter to specific node status (eg. `terminated`)
 
 You can also filter by tags by using the `tags.FILTER.TAG_NAME` querystring pattern as follows:
 

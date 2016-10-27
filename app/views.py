@@ -189,86 +189,88 @@ def nodes(region=None):
 
 
 def filter_elements(elements, query=None, status=None):
-    if status is not None:
-        _elements = []
-        for element in elements:
-            value = element.get('status', '')
-            if not value:
-                continue
+    elements = filter_by_args(elements, request)
+    elements = filter_by_tags(elements, request)
 
-            if value == status:
-                _elements.append(element)
-        elements = _elements
+    return elements
 
-    if query is not None:
-        _elements = []
-        for element in elements:
-            value = element.get('name', '')
-            if not value:
-                continue
-
-            if query in value:
-                _elements.append(element)
-        elements = _elements
-
-    exact_filters, list_filters, substring_filters = get_tag_filters(
+def filter_by_args(elements, request):
+    exact_filters, list_filters, substring_filters = get_filters(
         request.args)
 
-    search_keys = [
-        'id',
-        'image_id',
-        'instance_type',
-        'instance_class',
-        'group',
-        'elastic_ip',
-    ]
     bool_search_keys = [
         'elastic_ip',
     ]
-    for key in search_keys:
-        search_value = request.args.get(key, None)
-        if search_value is not None:
-            if key in bool_search_keys:
-                search_value = to_bool(search_value)
-
-            _elements = []
-            for element in elements:
-                value = element.get(key, '')
-                if not value:
-                    continue
-
-                if value == search_value:
-                    _elements.append(element)
-            elements = _elements
 
     for key, value in exact_filters.items():
         _elements = []
         for element in elements:
-            tag = element.get('tags', {}).get(key)
-            if not tag:
+            attribute = element.get(key, '')
+            if not attribute and value:
                 continue
 
-            if value == tag:
+            if key in bool_search_keys:
+                attribute = to_bool(attribute)
+
+            if value == attribute:
                 _elements.append(element)
         elements = _elements
     for key, value in list_filters.items():
         _elements = []
         for element in elements:
-            tag = element.get('tags', {}).get(key)
-            if not tag:
+            attribute = element.get(key)
+            if not attribute:
                 continue
 
-            if value in tag.split(','):
+            if value in attribute.split(','):
                 _elements.append(element)
         elements = _elements
     for key, value in substring_filters.items():
         _elements = []
         for element in elements:
-            tag = element.get('tags', {}).get(key)
-            if not tag:
+            attribute = element.get(key)
+            if not attribute:
                 continue
 
-            if value in tag:
+            if value in attribute:
+                _elements.append(element)
+        elements = _elements
+
+    return elements
+
+
+def filter_by_tags(elements, request):
+    exact_filters, list_filters, substring_filters = get_tag_filters(
+        request.args)
+
+    for key, value in exact_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get('tags', {}).get(key)
+            if not attribute and value:
+                continue
+
+            if value == attribute:
+                _elements.append(element)
+        elements = _elements
+    for key, value in list_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get('tags', {}).get(key)
+            if not attribute:
+                continue
+
+            if value in attribute.split(','):
+                _elements.append(element)
+        elements = _elements
+    for key, value in substring_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get('tags', {}).get(key)
+            if not attribute:
+                continue
+
+            if value in attribute:
                 _elements.append(element)
         elements = _elements
 
@@ -346,20 +348,60 @@ def get_nodes(regions, query=None, status=None):
     return filter_elements(nodes, query=query, status=status)
 
 
+def get_filters(args):
+    exact = {}
+    in_list = {}
+    substring = {}
+    search_keys = [
+        'availability_zone',
+        'elastic_ip',
+        'group',
+        'id',
+        'image_id',
+        'image_name',
+        'instance_type',
+        'instance_class',
+        'name',
+        'status',
+    ]
+    bool_search_keys = [
+        'elastic_ip',
+    ]
+
+    query = request.args.get('query', request.args.get('q'))
+    if query:
+        substring['name'] = query
+
+    for key, value in args.items():
+        if key in bool_search_keys:
+            value = to_bool(value)
+
+        if key.startswith('substring.') and key[10:] in search_keys:
+            substring[key[10:]] = value
+        elif key.startswith('in-list.') and key[8:] in search_keys:
+            in_list[key[8:]] = value
+        elif key.startswith('exact.') and key[6:] in search_keys:
+            exact[key[6:]] = value
+        elif key in search_keys:
+            exact[key] = value
+
+    return exact, in_list, substring
+
+
 def get_tag_filters(args):
-    tags = {}
-    tags_in_list = {}
-    tags_substring = {}
+    exact = {}
+    in_list = {}
+    substring = {}
     for key, value in args.items():
         if key.startswith('tags.substring.'):
-            tags_substring[key[15:]] = value
+            substring[key[15:]] = value
         elif key.startswith('tags.in-list.'):
-            tags_in_list[key[13:]] = value
+            in_list[key[13:]] = value
         elif key.startswith('tags.exact.'):
-            tags[key[11:]] = value
+            exact[key[11:]] = value
         elif key.startswith('tags.'):
-            tags[key[5:]] = value
-    return tags, tags_in_list, tags_substring
+            exact[key[5:]] = value
+    return exact, in_list, substring
 
 
 def limit_elements(elements, limit=None):
@@ -473,6 +515,7 @@ def get_nodes_in_region(region):
         return {}
 
     elastic_ips = get_elastic_ips(conn, region)
+    images = get_amis_in_region(region)
 
     instances = []
     reservations = conn.get_all_reservations()
@@ -509,12 +552,19 @@ def get_nodes_in_region(region):
 
         instance_name = name.replace('_', '-').strip()
 
+        image_name = [image['name'] for image in images if image['id'] == instance.image_id]
+        if len(image_name) == 1:
+            image_name = image_name[0]
+        else:
+            image_name = ''
+
         data = {
             'availability_zone': instance.placement,
             'group': group,
             'elastic_ip': ip_address in elastic_ips,
             'id': instance_id,
             'image_id': instance.image_id,
+            'image_name': image_name,
             'instance_type': instance.instance_type,
             'instance_class': instance.instance_type.split('.')[0],
             'ip_address': ip_address,
