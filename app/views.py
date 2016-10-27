@@ -222,10 +222,13 @@ def filter_elements(elements, query=None, status=None):
         'group',
         'elastic_ip',
     ]
+    bool_search_keys = [
+        'elastic_ip',
+    ]
     for key in search_keys:
         search_value = request.args.get(key, None)
         if search_value is not None:
-            if key in ['elastic_ip']:
+            if key in bool_search_keys:
                 search_value = to_bool(search_value)
 
             _elements = []
