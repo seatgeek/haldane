@@ -104,7 +104,9 @@ def amis():
     total_amis = len(amis)
     amis = limit_elements(amis, limit=request.args.get('limit'))
     total_not_hidden = len(amis)
-    amis = format_elements(amis, format=request.args.get('format'))
+    amis = format_elements(amis,
+        fields=request.args.get('fields'),
+        format=request.args.get('format'))
     total_hidden = total_not_hidden - len(amis)
 
     return json_response({
@@ -143,7 +145,9 @@ def nodes_by_group(group=None):
     _groups = {}
     for group, nodes in groups.items():
         total_nodes = len(nodes)
-        _groups[group] = format_elements(nodes, format=request.args.get('format', 'dict'))
+        _groups[group] = format_elements(nodes,
+            fields=request.args.get('fields'),
+            format=request.args.get('format', 'dict'))
         total_hidden += total_nodes - len(_groups[group])
 
     return json_response({
@@ -173,7 +177,9 @@ def nodes(region=None):
     total_nodes = len(nodes)
     nodes = limit_elements(nodes, limit=request.args.get('limit'))
     total_not_hidden = len(nodes)
-    nodes = format_elements(nodes, format=request.args.get('format'))
+    nodes = format_elements(nodes,
+        fields=request.args.get('fields'),
+        format=request.args.get('format'))
     total_hidden = total_not_hidden - len(nodes)
 
     return json_response({
@@ -317,7 +323,19 @@ def filter_by_tags(elements, request):
     return elements
 
 
-def format_elements(elements, format=None):
+def format_elements(elements, fields=None, format=None):
+    if fields:
+        fields = fields.split(',')
+        _elements = []
+        for element in elements:
+            _element = {}
+            if format == 'dict':
+                _element['name'] = element['name']
+            for field in fields:
+                if field in element:
+                    _element[field] = element.get(field)
+            _elements.append(_element)
+        elements = _elements
     if format == 'list':
         return elements
 

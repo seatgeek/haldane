@@ -119,6 +119,12 @@ The following attribute filters are avalable for the `/nodes` and `/nodes/group`
 - `region` (optional): Filter to a specific region (eg. `us-east-1`)
 - `status` (optional): Filter to specific node status (eg. `terminated`)
 
+Fields in the response body can be filtered using the `fields` querystring argument. Fields are a `comma-separated` list of any of the attributes already returned. Tags cannot be filtered on a per-tag basis, though you may choose to include or exclude the `tags` attribute entirely.
+
+```bash
+curl http://localhost:5000/nodes?fields=id,image_name
+```
+
 You can also filter by tags by using the `tags.FILTER.TAG_NAME` querystring pattern as follows:
 
 ```bash
