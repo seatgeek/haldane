@@ -329,7 +329,7 @@ def format_elements(elements, fields=None, format=None):
         _elements = []
         for element in elements:
             _element = {}
-            if format == 'dict':
+            if format != 'list':
                 _element['name'] = element['name']
             for field in fields:
                 if field in element:
