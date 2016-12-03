@@ -3,7 +3,7 @@ from app.utils import to_bool
 
 
 class Config(object):
-    ALLOWED_IPS = filter(None, os.getenv('ALLOWED_IPS').split(','))
+    ALLOWED_IPS = filter(None, os.getenv('ALLOWED_IPS', '').split(','))
     ALTERNATIVE_AUTOSCALE_TAG_NAME = os.getenv('ALTERNATIVE_AUTOSCALE_TAG_NAME', None)
     AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
     AWS_REGIONS = filter(None, os.getenv('AWS_REGIONS', 'us-east-1').split(','))
