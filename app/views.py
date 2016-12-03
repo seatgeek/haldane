@@ -1,5 +1,5 @@
 import gevent.monkey
-gevent.monkey.patch_all()
+gevent.monkey.patch_all()  # noqa
 
 import boto
 import boto.ec2
@@ -93,6 +93,7 @@ def status():
         'ok': True
     })
 
+
 @blueprint_http.route('/amis')
 @requires_auth
 def amis():
@@ -104,7 +105,8 @@ def amis():
     total_amis = len(amis)
     amis = limit_elements(amis, limit=request.args.get('limit'))
     total_not_hidden = len(amis)
-    amis = format_elements(amis,
+    amis = format_elements(
+        amis,
         fields=request.args.get('fields'),
         format=request.args.get('format'))
     total_hidden = total_not_hidden - len(amis)
@@ -119,6 +121,7 @@ def amis():
         },
         'amis': amis,
     })
+
 
 def get_amis(regions, query=None):
     amis = []
@@ -145,7 +148,8 @@ def nodes_by_group(group=None):
     _groups = {}
     for group, nodes in groups.items():
         total_nodes = len(nodes)
-        _groups[group] = format_elements(nodes,
+        _groups[group] = format_elements(
+            nodes,
             fields=request.args.get('fields'),
             format=request.args.get('format', 'dict'))
         total_hidden += total_nodes - len(_groups[group])
@@ -177,7 +181,8 @@ def nodes(region=None):
     total_nodes = len(nodes)
     nodes = limit_elements(nodes, limit=request.args.get('limit'))
     total_not_hidden = len(nodes)
-    nodes = format_elements(nodes,
+    nodes = format_elements(
+        nodes,
         fields=request.args.get('fields'),
         format=request.args.get('format'))
     total_hidden = total_not_hidden - len(nodes)
@@ -199,6 +204,7 @@ def filter_elements(elements, query=None, status=None):
     elements = filter_by_tags(elements, request)
 
     return elements
+
 
 def filter_by_args(elements, request):
     valid_search_keys = [
