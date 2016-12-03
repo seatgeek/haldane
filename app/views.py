@@ -216,6 +216,10 @@ def filter_by_args(elements, request):
     bool_search_keys = [
         'elastic_ip',
     ]
+    not_starts_with_filters, args = get_filter(request.args, 'not-starts-with', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
+    not_ends_with_filters, args = get_filter(args, 'not-ends-with', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
+    not_substring_filters, args = get_filter(args, 'not-substring', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
+    not_in_list_filters, args = get_filter(args, 'not-in-list', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
     starts_with_filters, args = get_filter(args, 'starts-with', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
     ends_with_filters, args = get_filter(args, 'ends-with', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
     substring_filters, args = get_filter(args, 'substring', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
@@ -280,10 +284,55 @@ def filter_by_args(elements, request):
                 _elements.append(element)
         elements = _elements
 
+    for key, value in not_in_list_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get(key)
+            if not attribute:
+                continue
+
+            if value not in attribute.split(','):
+                _elements.append(element)
+        elements = _elements
+    for key, value in not_substring_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get(key)
+            if not attribute:
+                continue
+
+            if value not in attribute:
+                _elements.append(element)
+        elements = _elements
+    for key, value in not_starts_with_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get(key)
+            if not attribute:
+                continue
+
+            if not attribute.startswith(value):
+                _elements.append(element)
+        elements = _elements
+    for key, value in not_ends_with_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get(key)
+            if not attribute:
+                continue
+
+            if not attribute.endswith(value):
+                _elements.append(element)
+        elements = _elements
+
     return elements
 
 
 def filter_by_tags(elements, request):
+    not_starts_with_filters, args = get_filter(request.args, 'tags.not-starts-with')
+    not_ends_with_filters, args = get_filter(args, 'tags.not-ends-with')
+    not_substring_filters, args = get_filter(args, 'tags.not-substring')
+    not_in_list_filters, args = get_filter(args, 'tags.not-in-list')
     starts_with_filters, args = get_filter(args, 'tags.starts-with')
     ends_with_filters, args = get_filter(args, 'tags.ends-with')
     substring_filters, args = get_filter(args, 'tags.substring')
@@ -338,6 +387,47 @@ def filter_by_tags(elements, request):
                 continue
 
             if attribute.endswith(value):
+                _elements.append(element)
+        elements = _elements
+
+    for key, value in not_in_list_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get('tags', {}).get(key)
+            if not attribute:
+                continue
+
+            if value not in attribute.split(','):
+                _elements.append(element)
+        elements = _elements
+    for key, value in not_substring_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get('tags', {}).get(key)
+            if not attribute:
+                continue
+
+            if value not in attribute:
+                _elements.append(element)
+        elements = _elements
+    for key, value in not_starts_with_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get('tags', {}).get(key)
+            if not attribute:
+                continue
+
+            if not attribute.startswith(value):
+                _elements.append(element)
+        elements = _elements
+    for key, value in not_ends_with_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get('tags', {}).get(key)
+            if not attribute:
+                continue
+
+            if not attribute.endswith(value):
                 _elements.append(element)
         elements = _elements
 
