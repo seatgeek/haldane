@@ -201,8 +201,26 @@ def filter_elements(elements, query=None, status=None):
     return elements
 
 def filter_by_args(elements, request):
-    exact_filters, list_filters, substring_filters, starts_with_filters, ends_with_filters = get_filters(
-        request.args)
+    valid_search_keys = [
+        'availability_zone',
+        'elastic_ip',
+        'group',
+        'id',
+        'image_id',
+        'image_name',
+        'instance_type',
+        'instance_class',
+        'name',
+        'status',
+    ]
+    bool_search_keys = [
+        'elastic_ip',
+    ]
+    starts_with_filters, args = get_filter(args, 'starts-with', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
+    ends_with_filters, args = get_filter(args, 'ends-with', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
+    substring_filters, args = get_filter(args, 'substring', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
+    in_list_filters, args = get_filter(args, 'in-list', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
+    exact_filters, args = get_filter(args, 'exact', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
 
     bool_search_keys = [
         'elastic_ip',
@@ -221,7 +239,7 @@ def filter_by_args(elements, request):
             if value == attribute:
                 _elements.append(element)
         elements = _elements
-    for key, value in list_filters.items():
+    for key, value in in_list_filters.items():
         _elements = []
         for element in elements:
             attribute = element.get(key)
@@ -266,8 +284,11 @@ def filter_by_args(elements, request):
 
 
 def filter_by_tags(elements, request):
-    exact_filters, list_filters, substring_filters, starts_with_filters, ends_with_filters = get_tag_filters(
-        request.args)
+    starts_with_filters, args = get_filter(args, 'tags.starts-with')
+    ends_with_filters, args = get_filter(args, 'tags.ends-with')
+    substring_filters, args = get_filter(args, 'tags.substring')
+    in_list_filters, args = get_filter(args, 'tags.in-list')
+    exact_filters, args = get_filter(args, 'tags.exact')
 
     for key, value in exact_filters.items():
         _elements = []
@@ -279,7 +300,7 @@ def filter_by_tags(elements, request):
             if value == attribute:
                 _elements.append(element)
         elements = _elements
-    for key, value in list_filters.items():
+    for key, value in in_list_filters.items():
         _elements = []
         for element in elements:
             attribute = element.get('tags', {}).get(key)
@@ -406,72 +427,37 @@ def get_nodes(regions, query=None, status=None):
     return filter_elements(nodes, query=query, status=status)
 
 
-def get_filters(args):
-    exact = {}
-    in_list = {}
-    substring = {}
-    ends_with = {}
-    starts_with = {}
-    search_keys = [
-        'availability_zone',
-        'elastic_ip',
-        'group',
-        'id',
-        'image_id',
-        'image_name',
-        'instance_type',
-        'instance_class',
-        'name',
-        'status',
-    ]
-    bool_search_keys = [
-        'elastic_ip',
-    ]
-
-    query = request.args.get('query', request.args.get('q'))
-    if query:
-        substring['name'] = query
-
+def get_filter(args, filter_name, filter_key_prefix=None, valid_search_keys=None, bool_search_keys=None):
+    filters = {}
+    unused_args = {}
     for key, value in args.items():
-        if key in bool_search_keys:
+        if bool_search_keys and key in bool_search_keys:
             value = to_bool(value)
 
-        if key.startswith('starts-with.') and key[12:] in search_keys:
-            starts_with[key[12:]] = value
-        elif key.startswith('ends-with.') and key[10:] in search_keys:
-            ends_with[key[10:]] = value
-        elif key.startswith('substring.') and key[10:] in search_keys:
-            substring[key[10:]] = value
-        elif key.startswith('in-list.') and key[8:] in search_keys:
-            in_list[key[8:]] = value
-        elif key.startswith('exact.') and key[6:] in search_keys:
-            exact[key[6:]] = value
-        elif key in search_keys:
-            exact[key] = value
+        if filter_name == 'exact' and valid_search_keys:
+            if key.replace('exact.', '') not in valid_search_keys:
+                unused_args[key] = value
+                continue
+            key = 'exact.{0}'.format(key.replace('exact.', ''))
+        elif filter_name == 'tags.exact' and key.startswith('tags.') and not key.startswith('tags.exact.'):
+            key = 'tags.exact.{0}'.format(key.replace('tags.', ''))
+        elif not key.startswith('{0}.'.format(filter_name)):
+            unused_args[key] = value
+            continue
 
-    return exact, in_list, substring, starts_with, ends_with
+        length = len(filter_name) + 1
+        filter_key_lookup = key[length:]
+        filter_key = filter_key_lookup
 
+        if filter_key_prefix:
+            filter_key = filter_key_lookup[len(filter_key_prefix):]
 
-def get_tag_filters(args):
-    exact = {}
-    in_list = {}
-    substring = {}
-    ends_with = {}
-    starts_with = {}
-    for key, value in args.items():
-        if key.startswith('tags.starts-with.'):
-            starts_with[key[17:]] = value
-        elif key.startswith('tags.ends-with.'):
-            ends_with[key[15:]] = value
-        elif key.startswith('tags.substring.'):
-            substring[key[15:]] = value
-        elif key.startswith('tags.in-list.'):
-            in_list[key[13:]] = value
-        elif key.startswith('tags.exact.'):
-            exact[key[11:]] = value
-        elif key.startswith('tags.'):
-            exact[key[5:]] = value
-    return exact, in_list, substring, starts_with, ends_with
+        if valid_search_keys and filter_key_lookup in valid_search_keys:
+            filters[filter_key] = value
+        elif not valid_search_keys:
+            filters[filter_key] = value
+
+    return filters, unused_args
 
 
 def limit_elements(elements, limit=None):
