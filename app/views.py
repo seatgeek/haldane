@@ -218,6 +218,7 @@ def filter_by_args(elements, request):
         'instance_class',
         'name',
         'status',
+        'vpc_id',
     ]
     bool_search_keys = [
         'elastic_ip',
