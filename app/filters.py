@@ -131,8 +131,8 @@ def filter_by_args(elements, args):
     for key, value in not_substring_filters.items():
         _elements = []
         for element in elements:
-            attribute = element.get(key)
-            if not attribute:
+            attribute = element.get(key, None)
+            if attribute is None:
                 continue
 
             if value not in attribute:
@@ -261,8 +261,8 @@ def filter_by_tags(elements, args):
     for key, value in not_substring_filters.items():
         _elements = []
         for element in elements:
-            attribute = element.get('tags', {}).get(key)
-            if not attribute:
+            attribute = element.get('tags', {}).get(key, None)
+            if attribute is None:
                 continue
 
             if value not in attribute:
