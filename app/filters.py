@@ -299,13 +299,13 @@ def get_filter(args, filter_name, filter_key_prefix=None, valid_search_keys=None
         if bool_search_keys and key in bool_search_keys:
             value = to_bool(value)
 
-        if filter_name == 'exact' and valid_search_keys:
-            if key.replace('exact.', '') not in valid_search_keys:
+        if filter_name == 'tags.exact' and key.startswith('tags.') and not key.startswith('tags.exact.'):
+            key = 'tags.exact.{0}'.format(key.replace('tags.', ''))
+        elif filter_name == 'exact' and not key.startswith('exact.') and '.' not in key:
+            if valid_search_keys and key.replace('exact.', '') not in valid_search_keys:
                 unused_args[key] = value
                 continue
             key = 'exact.{0}'.format(key.replace('exact.', ''))
-        elif filter_name == 'tags.exact' and key.startswith('tags.') and not key.startswith('tags.exact.'):
-            key = 'tags.exact.{0}'.format(key.replace('tags.', ''))
         elif not key.startswith('{0}.'.format(filter_name)):
             unused_args[key] = value
             continue
@@ -313,9 +313,6 @@ def get_filter(args, filter_name, filter_key_prefix=None, valid_search_keys=None
         length = len(filter_name) + 1
         filter_key_lookup = key[length:]
         filter_key = filter_key_lookup
-
-        if filter_key_prefix:
-            filter_key = filter_key_lookup[len(filter_key_prefix):]
 
         if valid_search_keys and filter_key_lookup in valid_search_keys:
             filters[filter_key] = value
