@@ -216,6 +216,8 @@ def filter_by_args(elements, request):
         'image_name',
         'instance_type',
         'instance_class',
+        'instance_profile_id',
+        'instance_profile_name',
         'name',
         'status',
         'vpc_id',
@@ -765,6 +767,12 @@ def get_nodes_in_region(region):
         else:
             image_name = ''
 
+        instance_profile_id = None
+        instance_profile_name = None
+        if instance.instance_profile:
+            instance_profile_id = instance.instance_profile['id']
+            instance_profile_name = instance.instance_profile['arn'].split('/', 1)[1]
+
         data = {
             'availability_zone': instance.placement,
             'group': group,
@@ -775,6 +783,8 @@ def get_nodes_in_region(region):
             'instance_type': instance.instance_type,
             'instance_class': instance.instance_type.split('.')[0],
             'ip_address': ip_address,
+            'instance_profile_id': instance_profile_id,
+            'instance_profile_name': instance_profile_name,
             'launch_time': instance.launch_time,
             'name': instance_name,
             'private_ip_address': pip_address,

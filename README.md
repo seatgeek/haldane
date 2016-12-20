@@ -115,6 +115,8 @@ The following attribute filters are avalable for the `/nodes` and `/nodes/group`
 - `image_name` (optional): An image name to filter by (eg. `BaseAMI`)
 - `instance_type` (optional): Filter to a specific instance type (eg. `t2.large`)
 - `instance_class` (optional): Filter to a specific instance type (eg. `t2`)
+- `instance_profile_id` (optional): Filter to a specific instance profile id (eg. `O34RQ3IUIO3FOUI3F`)
+- `instance_profile_name` (optional): Filter to a specific instance profile name (eg. `Production-Api`)
 - `name` (optional): A name to filter by (eg. `graphite-ec2-01`)
 - `region` (optional): Filter to a specific region (eg. `us-east-1`)
 - `status` (optional): Filter to specific node status (eg. `terminated`)
