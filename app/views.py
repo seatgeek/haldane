@@ -230,6 +230,9 @@ def filter_by_args(elements, request):
     starts_with_filters, args = get_filter(args, 'starts-with', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
     ends_with_filters, args = get_filter(args, 'ends-with', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
     substring_filters, args = get_filter(args, 'substring', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
+    is_false_filters, args = get_filter(args, 'is-false', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
+    is_true_filters, args = get_filter(args, 'is-true', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
+    is_null_filters, args = get_filter(args, 'is-null', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
     in_list_filters, args = get_filter(args, 'in-list', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
     exact_filters, args = get_filter(args, 'exact', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
 
@@ -248,6 +251,27 @@ def filter_by_args(elements, request):
                 attribute = to_bool(attribute)
 
             if value == attribute:
+                _elements.append(element)
+        elements = _elements
+    for key, value in is_null_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get(key, '')
+            if attribute is None:
+                _elements.append(element)
+        elements = _elements
+    for key, value in is_true_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get(key, None)
+            if attribute is True:
+                _elements.append(element)
+        elements = _elements
+    for key, value in is_false_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get(key, None)
+            if attribute is False:
                 _elements.append(element)
         elements = _elements
     for key, value in in_list_filters.items():
@@ -343,6 +367,9 @@ def filter_by_tags(elements, request):
     starts_with_filters, args = get_filter(args, 'tags.starts-with')
     ends_with_filters, args = get_filter(args, 'tags.ends-with')
     substring_filters, args = get_filter(args, 'tags.substring')
+    is_false_filters, args = get_filter(args, 'tags.is-false')
+    is_true_filters, args = get_filter(args, 'tags.is-true')
+    is_null_filters, args = get_filter(args, 'tags.is-null')
     in_list_filters, args = get_filter(args, 'tags.in-list')
     exact_filters, args = get_filter(args, 'tags.exact')
 
@@ -354,6 +381,27 @@ def filter_by_tags(elements, request):
                 continue
 
             if value == attribute:
+                _elements.append(element)
+        elements = _elements
+    for key, value in is_null_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get('tags', {}).get(key, '')
+            if attribute is None:
+                _elements.append(element)
+        elements = _elements
+    for key, value in is_true_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get('tags', {}).get(key, None)
+            if attribute is True:
+                _elements.append(element)
+        elements = _elements
+    for key, value in is_false_filters.items():
+        _elements = []
+        for element in elements:
+            attribute = element.get('tags', {}).get(key, None)
+            if attribute is False:
                 _elements.append(element)
         elements = _elements
     for key, value in in_list_filters.items():

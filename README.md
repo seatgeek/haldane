@@ -145,6 +145,9 @@ Tag filtering is performed *after* retrieving results from the EC2 API. The foll
 
 - `exact`: performs an exact match on the value of the tag name
 - `in-list`: splits the tag value by comma and verifies that the passed value is in the resulting list
+- `is-null`: checks if the value is `null`
+- `is-true`: checks if the value is `true`
+- `is-false`: checks if the value is `false`
 - `substring`: performs a substring match on the value of the tag name
 - `ends-with`: performs a match using `endswith` on the value of the tag name
 - `starts-with`: performs a match using `startswith` on the value of the tag name
