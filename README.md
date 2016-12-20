@@ -120,7 +120,7 @@ The following attribute filters are avalable for the `/nodes` and `/nodes/group`
 - `name` (optional): A name to filter by (eg. `graphite-ec2-01`)
 - `region` (optional): Filter to a specific region (eg. `us-east-1`)
 - `status` (optional): Filter to specific node status (eg. `terminated`)
-- `vpc_id` (optional): Filter to specific vpc (eg. `vpc-8765309`)
+- `vpc_id` (optional): Filter to specific vpc (eg. `vpc-8675309`)
 
 Tag values that are *exactly* one of the following strings are transformed into their language "equivalents":
 
