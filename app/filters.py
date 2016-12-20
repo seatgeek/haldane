@@ -1,6 +1,6 @@
 from app.config import Config
 
-def filter_elements(elements, request, query=None, status=None):
+def filter_elements(elements, request_args, query=None, status=None):
     elements = filter_by_args(elements, request_args)
     elements = filter_by_tags(elements, request_args)
 
