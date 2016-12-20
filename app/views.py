@@ -690,6 +690,12 @@ def get_nodes_in_region(region):
         tags = set_retrieve(instance_data, 'tags')
         if not tags:
             tags = {}
+        for tag, value in tags.items():
+            if value.lower() in ['true', 'false']:
+                tags[tag] = to_bool(value)
+            if value.lower() in ['none', 'nil', 'null']:
+                tags[tag] = None
+
 
         default_group_name = None
         if Config.ALTERNATIVE_AUTOSCALE_TAG_NAME:

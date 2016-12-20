@@ -119,6 +119,16 @@ The following attribute filters are avalable for the `/nodes` and `/nodes/group`
 - `region` (optional): Filter to a specific region (eg. `us-east-1`)
 - `status` (optional): Filter to specific node status (eg. `terminated`)
 
+Tag values that are *exactly* one of the following strings are transformed into their language "equivalents":
+
+- `none`
+- `nil`
+- `none`
+- `true`
+- `false`
+
+> The values are lowercased before the check is performed.
+
 Fields in the response body can be filtered using the `fields` querystring argument. Fields are a `comma-separated` list of any of the attributes already returned. Tags cannot be filtered on a per-tag basis, though you may choose to include or exclude the `tags` attribute entirely.
 
 ```bash
