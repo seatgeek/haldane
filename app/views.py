@@ -219,10 +219,10 @@ def filter_by_args(elements, request):
         'name',
         'status',
         'vpc_id',
-    ]
+    ] + Config.BOOLEAN_AWS_TAG_ATTRIBUTES
     bool_search_keys = [
         'elastic_ip',
-    ]
+    ] + Config.BOOLEAN_AWS_TAG_ATTRIBUTES
     not_starts_with_filters, args = get_filter(request.args, 'not-starts-with', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
     not_ends_with_filters, args = get_filter(args, 'not-ends-with', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
     not_substring_filters, args = get_filter(args, 'not-substring', valid_search_keys=valid_search_keys, bool_search_keys=bool_search_keys)
