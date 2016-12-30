@@ -1,6 +1,11 @@
+import copy
+
 from app.config import Config
 
 def filter_elements(elements, request_args, query=None, status=None):
+    request_args = request_args.to_dict()
+    if query:
+        request_args['substring.name'] = query
     elements = filter_by_args(elements, request_args)
     elements = filter_by_tags(elements, request_args)
 
