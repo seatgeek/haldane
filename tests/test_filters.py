@@ -1,18 +1,21 @@
+import werkzeug
+
 from app.filters import filter_elements
 from app.filters import filter_by_tags
 from app.filters import get_filter
 
+
 def test_filter_elements():
     elements = elements_fixture()
-    args = {'is-null.vpc_id': '', 'is-null.instance_profile_name': ''}
+    args = werkzeug.datastructures.ImmutableMultiDict({'is-null.vpc_id': '', 'is-null.instance_profile_name': ''})
     filtered = filter_elements(elements, args)
     assert len(filtered) == 1
 
-    args = {'is-null.vpc_id': 'vpc-8675309', 'is-null.instance_profile_name': ''}
+    args = werkzeug.datastructures.ImmutableMultiDict({'is-null.vpc_id': 'vpc-8675309', 'is-null.instance_profile_name': ''})
     filtered = filter_elements(elements, args)
     assert len(filtered) == 1
 
-    args = {'not-substring.image_name': 'BaseAMI', 'is-null.vpc_id': '', 'is-null.instance_profile_name': ''}
+    args = werkzeug.datastructures.ImmutableMultiDict({'not-substring.image_name': 'BaseAMI', 'is-null.vpc_id': '', 'is-null.instance_profile_name': ''})
     filtered = filter_elements(elements, args)
     assert len(filtered) == 1
 
