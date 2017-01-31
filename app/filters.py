@@ -1,9 +1,10 @@
 import copy
+import werkzeug
 
 from app.config import Config
 
 def filter_elements(elements, request_args, query=None, status=None):
-    if not isinstance(request_args, dict):
+    if isinstance(request_args, werkzeug.datastructures.ImmutableMultiDict):
         request_args = request_args.to_dict()
     if query:
         request_args['substring.name'] = query
