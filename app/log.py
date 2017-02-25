@@ -129,7 +129,7 @@ if LOGGING_VERBOSE:
 logging.config.dictConfig(LOG_SETTINGS)
 
 if BUGSNAG_API_KEY:
-    import bugsnag
+    from bugsnag.handlers import BugsnagHandler
 
 if SENTRY_DSN:
     from raven.conf import setup_logging
@@ -138,12 +138,12 @@ if SENTRY_DSN:
 
 
 def _configure_error_handler():
+    BUGSNAG_API_KEY = os.getenv('BUGSNAG_API_KEY')
     SENTRY_DSN = os.getenv('SENTRY_DSN', None)
 
     handler = None
     if BUGSNAG_API_KEY:
-        bugsnag.configure(api_key=BUGSNAG_API_KEY)
-        handler = client.log_handler()
+        handler = BugsnagHandler()
         handler.setLevel(logging.ERROR)
 
     if SENTRY_DSN:
