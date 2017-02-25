@@ -20,7 +20,7 @@ packaging==16.8
 py==1.4.32
 py-lru-cache==0.1.4
 pyparsing==2.1.10
-pytest==3.0.5
+pytest==3.0.6
 PyYAML==3.12
 raven==5.32.0
 six==1.10.0
