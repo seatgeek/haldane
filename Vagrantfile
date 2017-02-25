@@ -2,8 +2,6 @@
 # vi: set ft=ruby :
 require 'json'
 
-ENV['VAGRANT_DEFAULT_PROVIDER'] = 'vmware_fusion'
-
 def error(message)
   puts "\033[0;31m#{message}\033[0m"
 end
@@ -84,6 +82,7 @@ EOF
 
 cd /vagrant
 
+export RUNNING_IN_VAGRANT=1
 echo "- installing the service"
 make install
 

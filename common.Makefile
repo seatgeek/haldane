@@ -15,7 +15,11 @@ ifneq ($(wildcard .heroku/python/bin/python),)
 endif
 
 ifndef VIRTUALENV_PATH
+ifdef RUNNING_IN_VAGRANT
+	VIRTUALENV_PATH = /vagrant/.virtualenv
+else
 	VIRTUALENV_PATH = .virtualenv
+endif
 endif
 VIRTUALENV_BIN = $(VIRTUALENV_PATH)/bin
 
@@ -132,6 +136,7 @@ validate-amqp-dispatcher-config:  ## validates the amqp-dispatcher config yml fi
 
 .PHONY: venv
 venv: ## creates a python virtualenv with your dependencies installed
+ifneq ("$(wildcard requirements.txt)","")
 ifeq ($(BREW),)
 ifndef TRAVIS
 	which pip || sudo pip install pip==$(PIP_VERSION) > /dev/null
@@ -149,6 +154,7 @@ ifeq ($(BREW),)
 ifndef TRAVIS
 	sudo sh -c 'echo "source $(VIRTUALENV_BIN)/activate" > /etc/profile.d/$(APP_NAME).sh'
 	sudo sh -c 'echo "export PYTHONPATH=$(VIRTUALENV_PATH)/lib/python2.7/site-packages" >> /etc/profile.d/$(APP_NAME).sh'
+endif
 endif
 endif
 
