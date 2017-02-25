@@ -25,4 +25,4 @@ server: ## starts the built-in server
 
 .PHONY: gunicorn
 gunicorn: ## starts the gunicorn server
-	$(GUNICORN) -w $(WEB_CONCURRENCY) -b :$(PORT) --worker-class gevent --logger-class app.glogging.Logger app:make_application\(\) --error-logfile -
+	$(GUNICORN) -w $(WEB_CONCURRENCY) -b :$(PORT) --worker-class gevent --logger-class app.glogging.Logger app:make_application\(\) --error-logfile - --log-file -
