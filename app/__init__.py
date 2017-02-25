@@ -14,7 +14,8 @@ def make_application():
         handle_exceptions(flask_app)
     elif Config.SENTRY_DSN:
         from raven.contrib.flask import Sentry
-        Sentry(flask_app)
+        sentry = Sentry(Config.SENTRY_DSN)
+        sentry.init_app(app)
 
     flask_app.config.from_object('app.config.Config')
     flask_app.register_blueprint(app.views.blueprint_http)

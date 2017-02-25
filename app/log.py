@@ -132,6 +132,7 @@ if BUGSNAG_API_KEY:
     from bugsnag.handlers import BugsnagHandler
 
 if SENTRY_DSN:
+    from raven import Client as RavenClient
     from raven.conf import setup_logging
     from raven.handlers.logging import SentryHandler
     assert setup_logging
@@ -147,7 +148,8 @@ def _configure_error_handler():
         handler.setLevel(logging.ERROR)
 
     if SENTRY_DSN:
-        handler = SentryHandler(SENTRY_DSN)
+        client = RavenClient(SENTRY_DSN)
+        handler = SentryHandler(client)
         handler.setLevel(logging.ERROR)
     return handler
 
