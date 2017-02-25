@@ -1,8 +1,8 @@
 import gevent.monkey
 gevent.monkey.patch_all()  # noqa
 
-import boto
-import boto.ec2
+import boto3
+import botocore
 import json
 import lru
 import time
@@ -12,6 +12,8 @@ from flask import jsonify
 from flask import request
 from flask import Response
 
+from inflection import underscore
+
 from app.basic_auth import requires_auth
 from app.config import Config
 from app.filters import filter_elements
@@ -19,7 +21,6 @@ from app.log import getLogger
 from app.log import getRequestLogger
 from app.log import log_request
 from app.ssl_279 import _ssl
-from app.utils import set_retrieve
 from app.utils import sorted_dict
 from app.utils import sorted_json
 from app.utils import to_bool
@@ -42,13 +43,24 @@ def page_not_found(e):
     )
 
 
-@blueprint_http.errorhandler(boto.exception.EC2ResponseError)
-def handle_ec2_response_error(error):
-    logger.info('{0}: {1}'.format(error.error_code, error.error_message))
+@blueprint_http.errorhandler(boto3.exceptions.Boto3Error)
+def handle_boto3_response_error(error):
+    logger.info('{0}'.format(error))
     response = jsonify({
         'type': error_link,
-        'title': '{0} Error in EC2 Respone'.format(error.error_code),
-        'detail': error.error_message,
+        'title': '{0} Error in EC2 Response'.format(error),
+        'status': 500,
+    })
+    response.status_code = 500
+    return response
+
+
+@blueprint_http.errorhandler(botocore.exceptions.BotoCoreError)
+def handle_botocore_response_error(error):
+    logger.info('{0}'.format(vars(error)))
+    response = jsonify({
+        'type': error_link,
+        'title': '{0} Error in EC2 Response'.format(error),
         'status': 500,
     })
     response.status_code = 500
@@ -127,7 +139,8 @@ def amis():
 def get_amis(regions, query=None):
     amis = []
     for region in regions:
-        amis.extend(get_amis_in_region(region))
+        ec2_resource = boto3.resource('ec2', region_name=region)
+        amis.extend(get_amis_in_region(ec2_resource, region))
 
     return filter_elements(amis, request.args, query=query)
 
@@ -221,7 +234,7 @@ def format_elements(elements, fields=None, format=None):
         name = element['name']
         if name in _elements:
             existing = _elements[name]
-            logger.warning('duplicate name collission: {0}'.format(
+            logger.warning('duplicate name collision: {0}'.format(
                 name))
             logger.warning('existing running instance id: {0}'.format(
                 existing['id']))
@@ -323,52 +336,65 @@ def sort_by_group(nodes, group=None):
 @lru.lru_cache_function(
     max_size=Config.CACHE_SIZE,
     expiration=Config.CACHE_EXPIRATION)
-def get_amis_in_region(region):
-    conn = boto.ec2.connect_to_region(
-        region,
-        aws_access_key_id=Config.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=Config.AWS_SECRET_ACCESS_KEY,
-    )
-
-    if conn is None:
-        return {}
-
-    images = conn.get_all_images(owners=['self'])
+def get_amis_in_region(resource, region):
     amis = []
-    for image in images:
+    for image in resource.images.filter(Owners=['self']).all():
         ami = {
             'architecture': image.architecture,
-            'billing_products': image.billing_products,
-            'creationDate': image.creationDate,
+            'creation_date': image.creation_date,
             'description': image.description,
             'hypervisor': image.hypervisor,
-            'id': image.id,
-            'instance_lifecycle': image.instance_lifecycle,
-            'is_public': image.is_public,
-            'item': image.item,
+            'id': image.image_id,
+            'is_public': image.public,
             'kernel_id': image.kernel_id,
-            'location': image.location,
+            'location': image.image_location,
             'name': image.name,
-            'ownerId': image.ownerId,
-            'owner_alias': image.owner_alias,
+            'owner_alias': image.image_owner_alias,
             'owner_id': image.owner_id,
             'platform': image.platform,
             'product_codes': image.product_codes,
             'ramdisk_id': image.ramdisk_id,
-            'region': image.region.name,
+            'region': region,
             'root_device_name': image.root_device_name,
             'root_device_type': image.root_device_type,
             'sriov_net_support': image.sriov_net_support,
             'state': image.state,
-            'tags': image.tags,
-            'type': image.type,
+            'type': image.image_type,
             'virtualization_type': image.virtualization_type,
         }
+
+        block_device_fields = [
+            'attach_time',
+            'delete_on_termination',
+            'ebs',
+            'encrypted',
+            'ephemeral_name',
+            'iops',
+            'no_device',
+            'snapshot_id',
+            'status',
+            'volume_id',
+            'volume_size',
+            'volume_type',
+        ]
+
         block_device_mapping = {}
-        for mount, block_device in image.block_device_mapping.items():
-            block_device_mapping[mount] = vars(block_device)
-            del block_device_mapping[mount]['connection']
+        for block_device in image.block_device_mappings:
+            device_name = block_device['DeviceName']
+            data = block_device.get('Ebs', {})
+            data['ephemeral_name'] = block_device.get('VirtualName')
+            data['no_device'] = block_device.get('NoDevice')
+            data = dict((underscore(k), v) for k, v in data.iteritems())
+            for field in block_device_fields:
+                data[field] = data.get(field)
+            block_device_mapping[device_name] = data
+
+        tags = image.tags
+        if not tags:
+            tags = []
+
         ami['block_device_mapping'] = block_device_mapping
+        ami['tags'] = dict((tag['Key'], tag['Value']) for tag in tags)
         amis.append(ami)
     return amis
 
@@ -376,35 +402,25 @@ def get_amis_in_region(region):
 @lru.lru_cache_function(
     max_size=Config.CACHE_SIZE,
     expiration=Config.CACHE_EXPIRATION)
-def get_elastic_ips(conn, region):
-    return [address.public_ip for address in conn.get_all_addresses()]
+def get_elastic_ips(ec2_resource):
+    classic_addresses = ec2_resource.classic_addresses.all()
+    return [address.public_ip for address in classic_addresses]
 
 
 @lru.lru_cache_function(
     max_size=Config.CACHE_SIZE,
     expiration=Config.CACHE_EXPIRATION)
 def get_nodes_in_region(region):
-    conn = boto.ec2.connect_to_region(
-        region,
-        aws_access_key_id=Config.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=Config.AWS_SECRET_ACCESS_KEY,
-    )
-
-    if conn is None:
-        return {}
-
-    elastic_ips = get_elastic_ips(conn, region)
-    images = get_amis_in_region(region)
+    ec2_resource = boto3.resource('ec2', region_name=region)
+    elastic_ips = get_elastic_ips(ec2_resource)
+    images = get_amis_in_region(ec2_resource, region)
 
     instances = []
-    reservations = conn.get_all_reservations()
-    instances_for_region = [i for r in reservations for i in r.instances]
+    instances_for_region = ec2_resource.instances.all()
     for instance in instances_for_region:
-        instance_data = instance.__dict__
-        name = set_retrieve(instance_data, 'tags.Name')
-        ip_address = set_retrieve(instance_data, 'ip_address')
-        pip_address = set_retrieve(instance_data, 'private_ip_address')
-        instance_id = set_retrieve(instance_data, 'id')
+        ip_address = instance.public_ip_address
+        pip_address = instance.private_ip_address
+        instance_id = instance.instance_id
 
         if ip_address is None:
             ip_address = ''
@@ -413,15 +429,14 @@ def get_nodes_in_region(region):
         if instance_id is None:
             instance_id = ''
 
-        tags = set_retrieve(instance_data, 'tags')
-        if not tags:
-            tags = {}
+        tags = instance.tags
+        tags = dict((tag['Key'], tag['Value']) for tag in tags)
         for tag, value in tags.items():
             if value.lower() in ['true', 'false']:
                 tags[tag] = to_bool(value)
             if value.lower() in ['none', 'nil', 'null']:
                 tags[tag] = None
-
+        name = tags.get('Name')
 
         default_group_name = None
         if Config.ALTERNATIVE_AUTOSCALE_TAG_NAME:
@@ -445,12 +460,12 @@ def get_nodes_in_region(region):
 
         instance_profile_id = None
         instance_profile_name = None
-        if instance.instance_profile:
-            instance_profile_id = instance.instance_profile['id']
-            instance_profile_name = instance.instance_profile['arn'].split('/', 1)[1]
+        if instance.iam_instance_profile:
+            instance_profile_id = instance.iam_instance_profile['Id']
+            instance_profile_name = instance.iam_instance_profile['Arn'].split('/', 1)[1]
 
         data = {
-            'availability_zone': instance.placement,
+            'availability_zone': instance.placement['AvailabilityZone'],
             'group': group,
             'elastic_ip': ip_address in elastic_ips,
             'id': instance_id,
@@ -461,11 +476,11 @@ def get_nodes_in_region(region):
             'ip_address': ip_address,
             'instance_profile_id': instance_profile_id,
             'instance_profile_name': instance_profile_name,
-            'launch_time': instance.launch_time,
+            'launch_time': instance.launch_time.strftime('%Y-%m-%dT%H:%M:%S.000Z'),
             'name': instance_name,
             'private_ip_address': pip_address,
             'region': region,
-            'status': instance.state,
+            'status': instance.state['Name'],
             'tags': tags,
             'vpc_id': instance.vpc_id,
         }

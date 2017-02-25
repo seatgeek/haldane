@@ -11,17 +11,6 @@ def sorted_json(data):
     return json.dumps(data, sort_keys=True, indent=2, separators=(',', ': ')),
 
 
-def set_retrieve(mydict, path):
-    elem = mydict
-    try:
-        for x in path.strip('.').split('.'):
-            elem = elem.get(x)
-    except:
-        pass
-
-    return elem
-
-
 def to_bool(s):
     try:
         int_s = int(s)
