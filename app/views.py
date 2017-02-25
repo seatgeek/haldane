@@ -13,6 +13,7 @@ from flask import Response
 
 from app.aws import format_elements
 from app.aws import get_amis
+from app.aws import get_instance_types
 from app.aws import get_nodes
 from app.aws import get_regions
 from app.aws import get_status
@@ -134,6 +135,26 @@ def amis():
             'per_page': len(amis)
         },
         'amis': amis,
+    })
+
+
+@blueprint_http.route('/instance-types')
+@blueprint_http.route('/instance-types/<version>')
+@requires_auth
+def instance_types(version=None):
+    time_start = time.time()
+    instance_types, version = get_instance_types(version)
+
+    total_instance_types = len(instance_types)
+
+    return json_response({
+        'meta': {
+            'api_version': version,
+            'took': time.time() - time_start,
+            'total': total_instance_types,
+            'per_page': len(instance_types)
+        },
+        'instance-types': instance_types,
     })
 
 

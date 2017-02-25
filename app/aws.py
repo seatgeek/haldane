@@ -2,8 +2,10 @@ import gevent.monkey
 gevent.monkey.patch_all()  # noqa
 
 import boto3
+import json
 import lru
 
+from botocore import BOTOCORE_ROOT
 from inflection import underscore
 
 from app.config import Config
@@ -117,6 +119,19 @@ def get_amis_in_region(resource, region):
 def get_elastic_ips(ec2_resource):
     classic_addresses = ec2_resource.classic_addresses.all()
     return [address.public_ip for address in classic_addresses]
+
+
+@lru.lru_cache_function(
+    max_size=Config.CACHE_SIZE,
+    expiration=Config.CACHE_EXPIRATION)
+def get_instance_types(version=None):
+    if version is None:
+        version = Config.AWS_API_VERSION
+    filename = '{0}/data/ec2/{1}/service-2.json'.format(BOTOCORE_ROOT, version)
+    with open(filename) as f:
+        data = json.loads(f.read())
+        return data['shapes']['InstanceType']['enum'], version
+    return [], version
 
 
 @lru.lru_cache_function(

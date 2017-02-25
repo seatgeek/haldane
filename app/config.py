@@ -6,6 +6,7 @@ class Config(object):
     ALLOWED_IPS = filter(None, os.getenv('ALLOWED_IPS', '').split(','))
     ALTERNATIVE_AUTOSCALE_TAG_NAME = os.getenv('ALTERNATIVE_AUTOSCALE_TAG_NAME', None)
     AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+    AWS_API_VERSION = os.getenv('AWS_API_VERSION', '2016-09-15')
     AWS_REGIONS = filter(None, os.getenv('AWS_REGIONS', 'us-east-1').split(','))
     AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
     BASIC_AUTH = os.getenv('BASIC_AUTH')

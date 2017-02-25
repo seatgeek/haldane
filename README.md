@@ -73,6 +73,7 @@ All configuration is set via environment variables. The following environment va
 
 - `ALLOWED_IPS`: (Default: None) A comma-separated list of ip addresses that can basic authentication.
 - `ALTERNATIVE_AUTOSCALE_TAG_NAME`: (Default: None) A tag that can be used as an alternative to the AWS group name to categorize instances.
+- `AWS_API_VERSION`: (Default: `2016-09-15`) The default api version to use when retrieving instance type.
 - `AWS_ACCESS_KEY_ID`: (Default: None) An AWS access key id
 - `AWS_REGIONS`: (Default: us-east-1) A comma-separated list of regions to query for.
 - `AWS_SECRET_ACCESS_KEY`: (Default: None) An AWS secret access key
@@ -96,14 +97,15 @@ The AWS policy is fairly small, and an `iam-profile.json` is provided in this re
   - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects. Defaults to `dict`.
   - `limit` (optional): An integer to limit the resultset by
   - `query` (optional): Substring to search the `name` field by before returning the resultset
-- `/nodes/group/<group>?region=<region>&query=<query>&status=<status>`: List all nodes grouped by autoscale group
-  - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects.
-  - `query` (optional): Substring to search node names by before returning the resultset
 - `/amis?q=<query>&limit=<limit>`: List all amis owned by the user specified by the AWS credentials.
   - `format` (optional): If set to `list`, turns ami attributes from an object indexed by the name key to a list of those objects.
   - `id` (optional): An image id to filter by (eg. `ami-21e750d9`)
   - `query` (optional): Substring to search ami names by before returning the resultset
   - `region` (optional): Filter to a specific region
+- `/instance-types/<api-version>`: List all instance types available for a specific api version (version is optional).
+- `/nodes/group/<group>?region=<region>&query=<query>&status=<status>`: List all nodes grouped by autoscale group
+  - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects.
+  - `query` (optional): Substring to search node names by before returning the resultset
 
 The following attribute filters are avalable for the `/nodes` and `/nodes/group` endpoints:
 
