@@ -157,7 +157,10 @@ def get_nodes_in_region(region):
             instance_id = ''
 
         tags = instance.tags
+        if not tags:
+            tags = []
         tags = dict((tag['Key'], tag['Value']) for tag in tags)
+
         for tag, value in tags.items():
             if value.lower() in ['true', 'false']:
                 tags[tag] = to_bool(value)
