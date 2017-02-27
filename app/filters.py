@@ -26,8 +26,8 @@ def filter_by_args(elements, args):
         'instance_profile_id',
         'instance_profile_name',
         'ip_address',
-        'private_ip_address',
         'name',
+        'private_ip_address',
         'status',
         'vpc_id',
     ] + Config.BOOLEAN_AWS_TAG_ATTRIBUTES
