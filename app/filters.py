@@ -25,6 +25,8 @@ def filter_by_args(elements, args):
         'instance_class',
         'instance_profile_id',
         'instance_profile_name',
+        'ip_address',
+        'private_ip_address',
         'name',
         'status',
         'vpc_id',
