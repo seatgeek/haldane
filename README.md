@@ -86,6 +86,7 @@ All configuration is set via environment variables. The following environment va
 - `LISTEN_INTERFACE`: (Default: `0.0.0.0`) The interface which the server will bind to.
 - `PORT`: (Default: `5000`) Server port.
 - `SENTRY_DSN`: (Default: None) An DSN for reporting errors to sentry.
+- `TOP_LEVEL_AWS_TAG_ATTRIBUTES`: (Default: None) A comma-separated list of instance tags that will be pulled out as top-level instance attributes set.
 
 The AWS policy is fairly small, and an `iam-profile.json` is provided in this repository in the case that you wish to lock down permissions to only those necessary.
 

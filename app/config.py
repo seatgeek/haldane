@@ -18,3 +18,4 @@ class Config(object):
     LISTEN_INTERFACE = os.getenv('LISTEN_INTERFACE', '0.0.0.0')
     PORT = int(os.getenv('PORT', 5000))
     SENTRY_DSN = os.getenv('SENTRY_DSN')
+    TOP_LEVEL_AWS_TAG_ATTRIBUTES = filter(None, os.getenv('TOP_LEVEL_AWS_TAG_ATTRIBUTES', '').split(','))

@@ -217,6 +217,8 @@ def get_nodes_in_region(region):
 
         for key in Config.BOOLEAN_AWS_TAG_ATTRIBUTES:
             data[key] = to_bool(tags.get(key, ''))
+        for key in Config.TOP_LEVEL_AWS_TAG_ATTRIBUTES:
+            data[key] = tags.get(key, '')
 
         instances.append(sorted_dict(data))
 

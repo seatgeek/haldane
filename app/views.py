@@ -250,7 +250,7 @@ def csv_response(data):
         if fields:
             values = []
             for field in fields.split(','):
-                values.append(data.get(field, ''))
+                values.append(str(data.get(field, '')))
         resp.append(','.join(values))
 
     if fields:
