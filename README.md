@@ -94,11 +94,11 @@ The AWS policy is fairly small, and an `iam-profile.json` is provided in this re
 - `/`: Healthcheck
 - `/_status`: Healthcheck
 - `/nodes/<region>?q=<query>&limit=<limit>&status=<status>&group=<group>`: List all nodes
-  - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects. Defaults to `dict`.
+  - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects. Can also be set to `csv`. Defaults to `dict`.
   - `limit` (optional): An integer to limit the resultset by
   - `query` (optional): Substring to search the `name` field by before returning the resultset
 - `/amis?q=<query>&limit=<limit>`: List all amis owned by the user specified by the AWS credentials.
-  - `format` (optional): If set to `list`, turns ami attributes from an object indexed by the name key to a list of those objects.
+  - `format` (optional): If set to `list`, turns ami attributes from an object indexed by the name key to a list of those objects. Can also be set to `csv`. Defaults to `dict`.
   - `id` (optional): An image id to filter by (eg. `ami-21e750d9`)
   - `query` (optional): Substring to search ami names by before returning the resultset
   - `region` (optional): Filter to a specific region

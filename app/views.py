@@ -126,6 +126,9 @@ def amis():
         format=request.args.get('format'))
     total_hidden = total_not_hidden - len(amis)
 
+    if request.args.get('format') == 'csv':
+        return csv_response(amis)
+
     return json_response({
         'meta': {
             'took': time.time() - time_start,
@@ -216,6 +219,9 @@ def nodes(region=None):
         format=request.args.get('format'))
     total_hidden = total_not_hidden - len(nodes)
 
+    if request.args.get('format') == 'csv':
+        return csv_response(nodes)
+
     return json_response({
         'meta': {
             'took': time.time() - time_start,
@@ -232,4 +238,26 @@ def json_response(data):
     return Response(
         sorted_json(data),
         mimetype='application/json',
+    )
+
+def csv_response(data):
+    resp = []
+    header = []
+    fields = request.args.get('fields')
+    for instance, data in data.items():
+        header = data.keys()
+        values = data.values()
+        if fields:
+            for field in fields.split(','):
+                values.append(data.get(field, ''))
+        resp.append(','.join(values))
+
+    if fields:
+        header = [fields]
+    else:
+        header = [','.join(header)]
+
+    return Response(
+        "\n".join(header + resp),
+        mimetype="text/csv"
     )
