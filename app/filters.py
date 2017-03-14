@@ -2,6 +2,8 @@ import copy
 import werkzeug
 
 from app.config import Config
+from app.utils import to_bool
+
 
 def filter_elements(elements, request_args, query=None, status=None):
     request_args = request_args.to_dict()
