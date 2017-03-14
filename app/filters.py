@@ -91,7 +91,7 @@ def filter_by_args(elements, args):
             if not attribute:
                 continue
 
-            if value in attribute.split(','):
+            if attribute in value.split(','):
                 _elements.append(element)
         elements = _elements
     for key, value in substring_filters.items():
@@ -132,7 +132,7 @@ def filter_by_args(elements, args):
             if not attribute:
                 continue
 
-            if value not in attribute.split(','):
+            if attribute not in value.split(','):
                 _elements.append(element)
         elements = _elements
     for key, value in not_substring_filters.items():
