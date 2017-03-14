@@ -7,7 +7,8 @@
             "Action": [
                 "ec2:DescribeAddresses",
                 "ec2:DescribeInstances",
-                "ec2:DescribeImages"
+                "ec2:DescribeImages",
+                "rds:DescribeDBInstances"
             ],
             "Resource": [
                 "*"
