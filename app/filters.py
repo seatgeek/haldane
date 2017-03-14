@@ -18,7 +18,7 @@ def filter_by_args(elements, args):
         'availability_zone',
         'id',
         'name',
-        'region'
+        'region',
         'status',
 
         #  ec2
