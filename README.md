@@ -1,3 +1,4 @@
+# haldane
 
 a friendly http interface to the ec2 api
 
