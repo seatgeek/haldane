@@ -14,10 +14,16 @@ def filter_elements(elements, request_args, query=None, status=None):
 
 def filter_by_args(elements, args):
     valid_search_keys = [
+        # common
         'availability_zone',
+        'id',
+        'name',
+        'region'
+        'status',
+
+        #  ec2
         'elastic_ip',
         'group',
-        'id',
         'image_id',
         'image_name',
         'instance_type',
@@ -25,10 +31,35 @@ def filter_by_args(elements, args):
         'instance_profile_id',
         'instance_profile_name',
         'ip_address',
-        'name',
         'private_ip_address',
-        'status',
         'vpc_id',
+
+        # rds
+        'allocated_storage',
+        'auto_minor_version_upgrade',
+        'backup_retention_period',
+        'ca_certificate_identifier',
+        'copy_tags_to_snapshot',
+        'db_instance_arn',
+        'db_instance_class',
+        'db_instance_port',
+        'db_instance_status',
+        'db_name',
+        'dbi_resource_id',
+        'engine',
+        'engine_version',
+        'enhanced_monitoring_resource_arn',
+        'license_model',
+        'master_username',
+        'monitoring_interval',
+        'monitoring_role_arn',
+        'multi_az',
+        'preferred_backup_window',
+        'preferred_maintenance_window',
+        'publicly_accessible',
+        'secondary_availability_zone',
+        'storage_encrypted',
+        'storage_type',
     ] + Config.BOOLEAN_AWS_TAG_ATTRIBUTES
     bool_search_keys = [
         'elastic_ip',

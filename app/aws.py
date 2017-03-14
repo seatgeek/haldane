@@ -2,6 +2,7 @@ import gevent.monkey
 gevent.monkey.patch_all()  # noqa
 
 import boto3
+import datetime
 import json
 import lru
 
@@ -33,6 +34,17 @@ def get_nodes(request_args, regions, query=None, status=None):
         nodes.extend(get_nodes_in_region(region))
 
     return filter_elements(nodes, request_args, query=query, status=status)
+
+
+def get_rds_instances(request_args, regions, query=None, status=None):
+    rds_instances = []
+    for region in regions:
+        rds_instances.extend(get_rds_instances_in_region(region))
+
+    return filter_elements(rds_instances,
+                           request_args,
+                           query=query,
+                           status=status)
 
 
 def get_regions(region=None):
@@ -225,6 +237,34 @@ def get_nodes_in_region(region):
     return instances
 
 
+@lru.lru_cache_function(
+    max_size=Config.CACHE_SIZE,
+    expiration=Config.CACHE_EXPIRATION)
+def get_rds_instances_in_region(region):
+    client = boto3.client('rds', region_name=region)
+    paginator = client.get_paginator('describe_db_instances')
+    page_iterator = paginator.paginate()
+
+    rds_instances = []
+    for page in page_iterator:
+        for data in page['DBInstances']:
+            rds_instance = {}
+            rds_instance['id'] = data['DbiResourceId']
+            rds_instance['name'] = data['DBInstanceIdentifier']
+            rds_instance['region'] = region
+            rds_instance['status'] = data['DBInstanceStatus']
+            del data['DBInstanceIdentifier']
+            del data['DBInstanceStatus']
+            del data['DbiResourceId']
+
+            for key, value in data.items():
+                rds_instance[underscore(key)] = transform_value(value)
+
+            rds_instances.append(rds_instance)
+
+    return rds_instances
+
+
 def format_elements(elements, fields=None, format=None):
     if fields:
         fields = fields.split(',')
@@ -306,6 +346,22 @@ def sort_by_group(nodes, group=None):
             groups = {}
 
     return groups
+
+
+def transform_value(data):
+    if type(data) == datetime.datetime:
+        data = data.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+    elif type(data) == dict:
+        value = {}
+        for k, v in data.items():
+            value[underscore(k)] = transform_value(v)
+        data = value
+    elif type(data) == list:
+        value = []
+        for v in data:
+            value.append(transform_value(v))
+        data = value
+    return data
 
 
 def get_status(status=None):

@@ -15,6 +15,7 @@ from app.aws import format_elements
 from app.aws import get_amis
 from app.aws import get_instance_types
 from app.aws import get_nodes
+from app.aws import get_rds_instances
 from app.aws import get_regions
 from app.aws import get_status
 from app.aws import limit_elements
@@ -234,11 +235,51 @@ def nodes(region=None):
     })
 
 
+@blueprint_http.route('/rds-instances')
+@blueprint_http.route('/rds-instances/<region>')
+@requires_auth
+def rds_instances(region=None):
+    time_start = time.time()
+    query = request.args.get('query', request.args.get('q'))
+    regions = get_regions(request.args.get('region', region))
+    status = get_status(request.args.get('status'))
+    rds_instances = get_rds_instances(request.args,
+                                      regions,
+                                      query,
+                                      status=status)
+
+    total_rds_instances = len(rds_instances)
+    rds_instances = limit_elements(rds_instances,
+                                   limit=request.args.get('limit'))
+    total_not_hidden = len(rds_instances)
+    rds_instances = format_elements(
+        rds_instances,
+        fields=request.args.get('fields'),
+        format=request.args.get('format'))
+    total_hidden = total_not_hidden - len(rds_instances)
+
+    if request.args.get('format') == 'csv':
+        return csv_response(rds_instances)
+
+    return json_response({
+        'meta': {
+            'took': time.time() - time_start,
+            'total': total_rds_instances,
+            'hidden_rds_instances': total_hidden,
+            'regions': regions,
+            'per_page': len(rds_instances)
+        },
+        'rds-instances': rds_instances
+    })
+    pass
+
+
 def json_response(data):
     return Response(
         sorted_json(data),
         mimetype='application/json',
     )
+
 
 def csv_response(data):
     resp = []
