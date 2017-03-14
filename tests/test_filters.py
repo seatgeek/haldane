@@ -53,6 +53,7 @@ def test_get_filters():
     assert len(filters) == 0
     assert len(unused_args) == 5
 
+
 def test_filter_by_tags():
     elements = elements_fixture()
     filtered = filter_by_tags(elements, {'tags.exact.environment': 'production'})
@@ -79,6 +80,7 @@ def test_filter_by_tags():
     assert len(filtered) == 1
     filtered = filter_by_tags(elements, {'tags.starts-with.environment': 'stag'})
     assert len(filtered) == 1
+
 
 def test_filter_by_tags_negated():
     elements = elements_fixture()
@@ -118,8 +120,7 @@ def elements_fixture():
             "region": "us-east-1",
             "status": "running",
             "tags": {
-            "Name": "www-i-abcdefgh",
-                "Name": "bee-wxyz7890",
+                "Name": "www-i-abcdefgh",
                 "aws:autoscaling:groupName": "www",
                 "apps": "api,www",
                 "environment": "production",
