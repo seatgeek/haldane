@@ -162,6 +162,8 @@ def instance_types(version=None):
     })
 
 
+@blueprint_http.route('/instances/group')
+@blueprint_http.route('/instances/group/<group>')
 @blueprint_http.route('/nodes/group')
 @blueprint_http.route('/nodes/group/<group>')
 @requires_auth
@@ -198,6 +200,8 @@ def nodes_by_group(group=None):
     })
 
 
+@blueprint_http.route('/instances')
+@blueprint_http.route('/instances/<region>')
 @blueprint_http.route('/nodes')
 @blueprint_http.route('/nodes/<region>')
 @requires_auth

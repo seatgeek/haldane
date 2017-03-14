@@ -100,11 +100,11 @@ The AWS policy is fairly small, and an `iam-profile.json` is provided in this re
   - `query` (optional): Substring to search ami names by before returning the resultset
   - `region` (optional): Filter to a specific region
 - `/instance-types/<api-version>`: List all instance types available for a specific api version (version is optional).
-- `/nodes/<region>?q=<query>&limit=<limit>&status=<status>&group=<group>`: List all nodes
+- `/instances/<region>?q=<query>&limit=<limit>&status=<status>&group=<group>`: List all nodes
   - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects. Can also be set to `csv`. Defaults to `dict`.
   - `limit` (optional): An integer to limit the resultset by
   - `query` (optional): Substring to search the `name` field by before returning the resultset
-- `/nodes/group/<group>?region=<region>&query=<query>&status=<status>`: List all nodes grouped by autoscale group
+- `/instances/group/<group>?region=<region>&query=<query>&status=<status>`: List all nodes grouped by autoscale group
   - `format` (optional): If set to `list`, turns node attributes from an object indexed by the name key to a list of those objects.
   - `query` (optional): Substring to search node names by before returning the resultset
 - `/rds-instances/<region>?q=<query>&limit=<limit>&status=<status>`: List all nodes
@@ -132,7 +132,7 @@ The following attributes filters are globally available:
 - `region` (optional): Filter to a specific region (eg. `us-east-1`)
 - `status` (optional): Filter to specific node status (eg. `terminated`)
 
-The following attribute filters are available for the `/nodes` and `/nodes/group` endpoints:
+The following attribute filters are available for the `/instances` and `/instances/group` endpoints:
 
 - `elastic_ip` (optional): Whether or not to filter to just instances with an elastic_ip
 - `group` (optional): An autoscale group name to filter by
@@ -179,7 +179,7 @@ The following attribute filters are available for the `/rds-instances` endpoint:
 Fields in the response body can be filtered using the `fields` querystring argument. Fields are a `comma-separated` list of any of the attributes already returned. Tags cannot be filtered on a per-tag basis, though you may choose to include or exclude the `tags` attribute entirely.
 
 ```bash
-curl http://localhost:5000/nodes?fields=id,image_name
+curl http://localhost:5000/instances?fields=id,image_name
 ```
 
 #### Complex Filters
@@ -202,7 +202,7 @@ Filtering is performed *after* retrieving results from the EC2 API. The followin
 A simple example is as follows
 
 ```bash
-curl http://localhost:5000/nodes?substring.name=www
+curl http://localhost:5000/instances?substring.name=www
 ```
 
 #### Tag Filtering
@@ -210,13 +210,13 @@ curl http://localhost:5000/nodes?substring.name=www
 You can also filter by tags by using the `tags.FILTER.TAG_NAME` querystring pattern as follows:
 
 ```bash
-curl http://localhost:5000/nodes?tags.exact.bootstrapped=true&tags.substring.Name=admin
+curl http://localhost:5000/instances?tags.exact.bootstrapped=true&tags.substring.Name=admin
 ```
 
 You may also specify an exact match filter when omitting the `FILTER` section like so:
 
 ```bash
-curl http://localhost:5000/nodes?tags.bootstrapped=true
+curl http://localhost:5000/instances?tags.bootstrapped=true
 ```
 
 #### Filtering by the status field
@@ -231,7 +231,7 @@ Valid `status` values are as follows:
 - `stopped`
 
 ```bash
-curl http://localhost:5000/nodes?status=running
+curl http://localhost:5000/instances?status=running
 ```
 
 #### Errors
@@ -258,4 +258,4 @@ This services uses `boto3` underneath to provide an api listing all nodes availa
 
 ## Caveats
 
-When using the `/nodes` or `/nodes/group` endpoints with a format of `dict`, the response is keyed by the `Name` tag of the ec2 instance. If you have multiple servers with the same value for the `Name` tag, this may result in "hidden" servers. If a server is not running, it will be hidden by default, otherwise it may overwrite the previous entry. This will both be logged in the `haldane` logging output *and* will be surfaced as `meta.hidden_nodes`, regardless of the endpoint being used.
+When using the `/instances` or `/instances/group` endpoints with a format of `dict`, the response is keyed by the `Name` tag of the ec2 instance. If you have multiple servers with the same value for the `Name` tag, this may result in "hidden" servers. If a server is not running, it will be hidden by default, otherwise it may overwrite the previous entry. This will both be logged in the `haldane` logging output *and* will be surfaced as `meta.hidden_nodes`, regardless of the endpoint being used.
