@@ -241,6 +241,9 @@ def format_elements(elements, fields=None, format=None):
     if format == 'list':
         return elements
 
+    if fields is None:
+        fields = []
+
     _elements = {}
     for element in elements:
         name = element['name']
@@ -260,6 +263,9 @@ def format_elements(elements, fields=None, format=None):
                     element['id'],
                     element.get('status', '')))
                 continue
+
+        if fields and 'name' not in fields:
+            del element['name']
         _elements[name] = element
 
     return sorted_dict(_elements)
