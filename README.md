@@ -119,7 +119,6 @@ Field values that are *exactly* one of the following strings are transformed int
 
 - `none`
 - `nil`
-- `none`
 - `true`
 - `false`
 
