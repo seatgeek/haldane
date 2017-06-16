@@ -14,14 +14,18 @@ ifneq ($(wildcard .heroku/python/bin/python),)
 	VIRTUALENV_PATH = .heroku/python
 endif
 
-ifndef VIRTUALENV_PATH
-ifdef RUNNING_IN_VAGRANT
+ifneq ($(wildcard /vagrant/.*),)
 	VIRTUALENV_PATH = /vagrant/.virtualenv
-else
+endif
+
+ifndef VIRTUALENV_PATH
 	VIRTUALENV_PATH = .virtualenv
 endif
-endif
 VIRTUALENV_BIN = $(VIRTUALENV_PATH)/bin
+
+ifndef REQUIREMENTS_PATH
+	REQUIREMENTS_PATH = requirements.txt
+endif
 
 ifdef TRAVIS
 	SUDO_PREFIX =
@@ -31,6 +35,10 @@ endif
 
 ifndef NUMBER_OF_HTTP_WORKERS
 	NUMBER_OF_HTTP_WORKERS = 2
+endif
+
+ifndef PEP8_ARGS
+	PEP8_ARGS =
 endif
 
 ifndef TEST_NAME
@@ -62,11 +70,12 @@ GUNICORN = $(ENV) $(VIRTUALENV_BIN)/gunicorn
 NOSE = $(VIRTUALENV_BIN)/nosetests
 PEP8 = $(VIRTUALENV_BIN)/pep8
 PIP = $(VIRTUALENV_BIN)/pip
-PIP_VERSION = 8.1.2
+PIP_VERSION = 9.0.1
 PYCURL_SSL_LIBRARY = openssl
 PYTHON = $(ENV) $(VIRTUALENV_BIN)/python
 R_LIB = $(R_PATH)/lib
 R_MIRROR = http://cran.rstudio.com
+UNAME_S := $(shell uname -s)
 WHOAMI := $(shell whoami)
 
 # If the first argument is "fab"...
@@ -85,14 +94,17 @@ help: ## this help.
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-36s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: install
-install: requirements venv ## runs requirements installation and virtualenv creation
+install:: requirements venv ## runs requirements installation and virtualenv creation
 
 .PHONY: aptfile
 aptfile: ## runs the service's aptfile to install debian dependencies
 ifeq ($(BREW),)
-	which aptfile || (wget --quiet -O /tmp/aptfile_0.0.2_amd64.deb http://sg-vagrant.s3.amazonaws.com/aptfile/aptfile_0.0.2_amd64.deb && sudo dpkg -i /tmp/aptfile_0.0.2_amd64.deb)
+	which aptfile || (wget --quiet -O /tmp/aptfile_1.1.0_amd64.deb http://sg-vagrant.s3.amazonaws.com/aptfile/aptfile_1.1.0_amd64.deb && sudo dpkg -i /tmp/aptfile_1.1.0_amd64.deb)
 	sudo -E ./aptfile
 endif
+
+.PHONY: app-clean
+app-clean:: ## overridable clean method
 
 .PHONY: clean
 clean: ## delete the virtualenv and any ignored files
@@ -100,10 +112,15 @@ clean: ## delete the virtualenv and any ignored files
 	git clean -fX
 	rm -rf logs/*
 	find . -name "*.pyc" -exec rm -rf {} \;
+	$(MAKE) app-clean
 
 .PHONY: create_env_file
 create_env_file: ## copies the contents of .env.sample into .env
 	@cp -n .env.sample .env || true
+
+.PHONY: cronq-runner
+cronq-runner: ## runs a cronq-runner
+	$(VIRTUALENV_BIN)/cronq-runner
 
 .PHONY: fab
 fab: ## executes a fab command
@@ -115,11 +132,15 @@ honcho: ## starts honcho, the python-equivalent of the foreman process manager
 
 .PHONY: pep8
 pep8: ## runs pep8
-	$(VIRTUALENV_BIN)/pep8 .
+	$(VIRTUALENV_BIN)/pep8 $(PEP8_ARGS) .
 
 .PHONY: pyflakes
 pyflakes: ## runs pyflakes
 	$(VIRTUALENV_BIN)/pyflakes .
+
+.PHONY: flake8
+flake8: ## runs both pep8 and pyflakes
+	$(VIRTUALENV_BIN)/flake8 .
 
 .PHONY: r
 r: ## installs r dependencies and sets the R_LIB path in your ~/.Rprofile
@@ -132,11 +153,11 @@ r: ## installs r dependencies and sets the R_LIB path in your ~/.Rprofile
 
 .PHONY: validate-amqp-dispatcher-config
 validate-amqp-dispatcher-config:  ## validates the amqp-dispatcher config yml file
-	if [ -f amqp-dispatcher-config.yml ]; then PYTHONPATH=. amqp-dispatcher --validate --config amqp-dispatcher-config.yml; fi
+	if [ -f amqp-dispatcher-config.yml ]; then PYTHONPATH=. $(AMQP_DISPATCHER) --validate --config amqp-dispatcher-config.yml; fi
 
 .PHONY: venv
 venv: ## creates a python virtualenv with your dependencies installed
-ifneq ("$(wildcard requirements.txt)","")
+ifneq ("$(wildcard $(REQUIREMENTS_PATH))","")
 ifeq ($(BREW),)
 ifndef TRAVIS
 	which pip || sudo pip install pip==$(PIP_VERSION) > /dev/null
@@ -147,14 +168,12 @@ else
 endif
 	if [ ! -f $(PIP) ]; then virtualenv --distribute $(VIRTUALENV_PATH) > /dev/null; fi
 	$(PIP) install --upgrade pip==$(PIP_VERSION) > /dev/null
-	bash -c 'NUMPY=$$(grep numpy requirements.txt || true) ; if [[ ! -z "$$NUMPY" ]]; then $(PIP) install $$NUMPY; fi'
-	export PYCURL_SSL_LIBRARY=openssl && export CFLAGS='-std=c99' && $(PIP) install -r requirements.txt > /dev/null
-	bash -c 'NLTK=$$(grep nltk requirements.txt || true) ; if [[ ! -z "$$NLTK" ]]; then $(PYTHON) -m nltk.downloader punkt stopwords; fi'
-ifeq ($(BREW),)
-ifndef TRAVIS
+	bash -c 'NUMPY=$$(grep numpy $(REQUIREMENTS_PATH) || true) ; if [[ ! -z "$$NUMPY" ]]; then $(PIP) install $$NUMPY; fi'
+	export PYCURL_SSL_LIBRARY=openssl && export CFLAGS='-std=c99' && $(PIP) install -r $(REQUIREMENTS_PATH) > /dev/null
+	bash -c 'NLTK=$$(grep nltk $(REQUIREMENTS_PATH) || true) ; if [[ ! -z "$$NLTK" ]]; then $(PYTHON) -m nltk.downloader punkt stopwords; fi'
+ifneq ($(wildcard /vagrant/.*),)
 	sudo sh -c 'echo "source $(VIRTUALENV_BIN)/activate" > /etc/profile.d/$(APP_NAME).sh'
 	sudo sh -c 'echo "export PYTHONPATH=$(VIRTUALENV_PATH)/lib/python2.7/site-packages" >> /etc/profile.d/$(APP_NAME).sh'
-endif
 endif
 endif
 
