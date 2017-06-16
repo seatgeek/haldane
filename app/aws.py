@@ -260,6 +260,9 @@ def get_rds_instances_in_region(region):
             for key, value in data.items():
                 rds_instance[underscore(key)] = transform_value(value)
 
+            response = client.list_tags_for_resource(ResourceName=rds_instance['db_instance_arn'])
+            rds_instance['tags'] = dict((tag['Key'], tag['Value']) for tag in response['TagList'])
+
             rds_instances.append(rds_instance)
 
     return rds_instances
