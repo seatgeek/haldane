@@ -1,3 +1,8 @@
+ifndef VIRTUALENV_PATH
+ifneq ($(wildcard /vagrant/.*),)
+	VIRTUALENV_PATH = /vagrant/.virtualenv
+endif
+
 ifneq ($(shell which brew),)
 	VIRTUALENV_PATH = $(HOME)/.virtualenvs/$(APP_NAME)
 endif
@@ -13,9 +18,6 @@ endif
 ifneq ($(wildcard .heroku/python/bin/python),)
 	VIRTUALENV_PATH = .heroku/python
 endif
-
-ifneq ($(wildcard /vagrant/.*),)
-	VIRTUALENV_PATH = /vagrant/.virtualenv
 endif
 
 ifndef VIRTUALENV_PATH
@@ -171,9 +173,11 @@ endif
 	bash -c 'NUMPY=$$(grep numpy $(REQUIREMENTS_PATH) || true) ; if [[ ! -z "$$NUMPY" ]]; then $(PIP) install $$NUMPY; fi'
 	export PYCURL_SSL_LIBRARY=openssl && export CFLAGS='-std=c99' && $(PIP) install -r $(REQUIREMENTS_PATH) > /dev/null
 	bash -c 'NLTK=$$(grep nltk $(REQUIREMENTS_PATH) || true) ; if [[ ! -z "$$NLTK" ]]; then $(PYTHON) -m nltk.downloader punkt stopwords; fi'
+ifneq ($(VIRTUALENV_PATH),.virtualenv)
 ifneq ($(wildcard /vagrant/.*),)
 	sudo sh -c 'echo "source $(VIRTUALENV_BIN)/activate" > /etc/profile.d/$(APP_NAME).sh'
 	sudo sh -c 'echo "export PYTHONPATH=$(VIRTUALENV_PATH)/lib/python2.7/site-packages" >> /etc/profile.d/$(APP_NAME).sh'
+endif
 endif
 endif
 
