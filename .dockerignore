@@ -1,0 +1,4 @@
+.dockerignore
+.env
+tests
+Dockerfile
