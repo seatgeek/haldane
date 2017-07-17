@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 __version__ = '0.2.0'
 
-from flask import Flask
-
 
 def make_application():
+    from flask import Flask
     from app.config import Config
     import app.views
 
