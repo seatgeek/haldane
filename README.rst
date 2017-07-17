@@ -1,20 +1,25 @@
-# haldane
+=======
+haldane
+=======
 
 a friendly http interface to the ec2 api
 
-## Requirements
+Requirements
+============
 
 - Vagrant
 - VMWare Fusion
 - 1 gigabytes of free ram
 - Python 2.7.8 or below due to a bug in 2.7.9 SSL
 
-## Installation
+Installation
+============
 
 > OS X Users are assumed to be running homebrew. Please set that up before continuing.
 > Our makefile should install everything necessary to run this service within a Ubuntu 14.04 or Mac OS X 10.9+ environment.
 
-### On a VM
+On a VM
+-------
 
 Once you have vagrant and virtualbox installed, you can bring up a vm with the service installed:
 
@@ -29,7 +34,8 @@ By default, this will use `vmware_fusion` as the vagrant provider, though using 
 vagrant up --provider virtualbox
 ```
 
-### Manually
+Manually
+--------
 
 You will need to setup a few system-level dependencies first. You can do this using the following make target:
 
@@ -55,7 +61,8 @@ deactivate
 # for more actions you can perform, just run the `make` or `make help` commands
 ```
 
-## Running
+Running
+=======
 
 You can ssh onto the box and run the webservice:
 
@@ -68,7 +75,8 @@ The webservice will now be running and exposed to the host machine at `http://lo
 
 > Note that you may wish to change the configuration in use. You can do so by modifying the .env.test file with your configuration.
 
-## Configuration
+Configuration
+=============
 
 All configuration is set via environment variables. The following environment variables are available for use:
 
@@ -91,7 +99,8 @@ All configuration is set via environment variables. The following environment va
 
 The AWS policy is fairly small, and an `iam-profile.json` is provided in this repository in the case that you wish to lock down permissions to only those necessary.
 
-## Endpoints:
+Endpoints
+=========
 
 - `/`: Healthcheck
 - `/_status`: Healthcheck
@@ -113,7 +122,8 @@ The AWS policy is fairly small, and an `iam-profile.json` is provided in this re
   - `limit` (optional): An integer to limit the resultset by
   - `query` (optional): Substring to search the `name` field by before returning the resultset
 
-### Filters
+Filters
+-------
 
 Field values that are *exactly* one of the following strings are transformed into their language "equivalents":
 
@@ -174,7 +184,8 @@ The following attribute filters are available for the `/rds-instances` endpoint:
 - `storage_encrypted` (optional)
 - `storage_type` (optional)
 
-#### Field Filtering
+Field Filtering
+~~~~~~~~~~~~~~~
 
 Fields in the response body can be filtered using the `fields` querystring argument. Fields are a `comma-separated` list of any of the attributes already returned. Tags cannot be filtered on a per-tag basis, though you may choose to include or exclude the `tags` attribute entirely.
 
@@ -182,7 +193,8 @@ Fields in the response body can be filtered using the `fields` querystring argum
 curl http://localhost:5000/instances?fields=id,image_name
 ```
 
-#### Complex Filters
+Complex Filters
+~~~~~~~~~~~~~~~
 
 Filtering is performed *after* retrieving results from the EC2 API. The following are valid filters:
 
@@ -205,7 +217,8 @@ A simple example is as follows
 curl http://localhost:5000/instances?substring.name=www
 ```
 
-#### Tag Filtering
+Tag Filtering
+~~~~~~~~~~~~~
 
 You can also filter by tags by using the `tags.FILTER.TAG_NAME` querystring pattern as follows:
 
@@ -219,7 +232,8 @@ You may also specify an exact match filter when omitting the `FILTER` section li
 curl http://localhost:5000/instances?tags.bootstrapped=true
 ```
 
-#### Filtering by the status field
+Filtering by the status field
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Valid `status` values are as follows:
 
@@ -234,7 +248,8 @@ Valid `status` values are as follows:
 curl http://localhost:5000/instances?status=running
 ```
 
-#### Errors
+Errors
+~~~~~~
 
 If an invalid querystring argument is passed, a `json` response similar to the following will be sent from the service:
 
@@ -252,10 +267,12 @@ The following errors are possible:
 - Invalid status querystring argument
 - General EC2ResponseError
 
-## How it works
+How it works
+============
 
 This services uses `boto3` underneath to provide an api listing all nodes available in a given EC2 account. It is intended to be used as a replacement for hitting the EC2 api directly, as that can be slow at times.
 
-## Caveats
+Caveats
+=======
 
 When using the `/instances` or `/instances/group` endpoints with a format of `dict`, the response is keyed by the `Name` tag of the ec2 instance. If you have multiple servers with the same value for the `Name` tag, this may result in "hidden" servers. If a server is not running, it will be hidden by default, otherwise it may overwrite the previous entry. This will both be logged in the `haldane` logging output *and* will be surfaced as `meta.hidden_nodes`, regardless of the endpoint being used.
