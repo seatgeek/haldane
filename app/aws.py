@@ -293,7 +293,8 @@ def format_elements(elements, fields=None, format=None):
         name = element['name']
         if name in _elements:
             existing = _elements[name]
-            logger.warning('duplicate name collision: {0}'.format(
+            print name
+            logger.warning(u'duplicate name collision: {0}'.format(
                 name))
             logger.warning('existing running instance id: {0}'.format(
                 existing['id']))
