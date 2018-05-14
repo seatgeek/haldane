@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.3.0 (2018-05-14)
+------------------
+
+- Chore: upgrade all dependencies. [Jose Diaz-Gonzalez]
+
 0.2.2 (2018-05-14)
 ------------------
 
