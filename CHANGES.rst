@@ -1,6 +1,24 @@
 Changelog
 =========
 
+0.2.2 (2018-05-14)
+------------------
+
+Fix
+~~~
+
+- Remove extra print statement. [Jose Diaz-Gonzalez]
+
+- Handle unicode error. [Jose Diaz-Gonzalez]
+
+- Re-add port retrieval. [Jose Diaz-Gonzalez]
+
+- Re-add slashes. [Jose Diaz-Gonzalez]
+
+- Remove slashes from Procfile. [Jose Diaz-Gonzalez]
+
+- Set port. [Jose Diaz-Gonzalez]
+
 0.2.1 (2017-07-17)
 ------------------
 
